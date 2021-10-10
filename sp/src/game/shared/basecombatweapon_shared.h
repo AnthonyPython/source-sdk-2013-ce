@@ -392,6 +392,24 @@ public:
 	virtual void			Activate( void );
 
 	virtual bool ShouldUseLargeViewModelVROverride() { return false; }
+#ifdef use_ironsight
+	Vector					GetIronsightPositionOffset(void) const;
+	QAngle					GetIronsightAngleOffset(void) const;
+	float					GetIronsightFOVOffset(void) const;
+
+	CNetworkVar(bool, m_bIsIronsighted);
+	CNetworkVar(float, m_flIronsightedTime);
+
+	virtual bool				HasIronsights(void) { return GetWpnData().m_bhasIronsight; } //default yes; override and return false for weapons with no ironsights (like weapon_crowbar)
+	bool					IsIronsighted(void);
+	void					ToggleIronsights(void);
+	void					EnableIronsights(void);
+	void					DisableIronsights(void);
+	void					SetIronsightTime(void);
+#ifdef CLIENT_DLL
+	void					RecvProxy_ToggleSights(const CRecvProxyData* pData, void* pStruct, void* pOut);
+#endif
+#endif
 public:
 // Server Only Methods
 #if !defined( CLIENT_DLL )

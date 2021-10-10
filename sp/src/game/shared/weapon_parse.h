@@ -12,6 +12,7 @@
 #endif
 
 #include "shareddefs.h"
+#include "hl2_shareddefs.h"
 
 class IFileSystem;
 
@@ -105,7 +106,13 @@ public:
 	int						iAmmoType;
 	int						iAmmo2Type;
 	bool					m_bMeleeWeapon;		// Melee weapons can always "fire" regardless of ammo.
+#ifdef use_ironsight
+	Vector					vecIronsightPosOffset;
+	QAngle					angIronsightAngOffset;
+	float					flIronsightFOVOffset;
 
+	bool					m_bhasIronsight;
+#endif
 	// This tells if the weapon was built right-handed (defaults to true).
 	// This helps cl_righthand make the decision about whether to flip the model or not.
 	bool					m_bBuiltRightHanded;

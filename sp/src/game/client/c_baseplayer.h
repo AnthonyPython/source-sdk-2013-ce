@@ -228,6 +228,9 @@ public:
 	// Specific queries about this player.
 	bool						InFirstPersonView();
 	bool						ShouldDrawThisPlayer();
+#if 0
+	bool SetFOV(C_BaseEntity* pRequester, int FOV, float zoomRate);
+#endif
 
 	// Called by the view model if its rendering is being overridden.
 	virtual bool				ViewModel_IsTransparent( void );

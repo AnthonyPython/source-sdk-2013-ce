@@ -446,6 +446,32 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 		Q_strncpy( szAmmo2, pAmmo, sizeof( szAmmo2 )  );
 	iAmmo2Type = GetAmmoDef()->Index( szAmmo2 );
 
+#ifdef use_ironsight
+	KeyValues* pSights = pKeyValuesData->FindKey("IronSight");
+	if (pSights)
+	{
+		vecIronsightPosOffset.x = pSights->GetFloat("forward", 0.0f);
+		vecIronsightPosOffset.y = pSights->GetFloat("right", 0.0f);
+		vecIronsightPosOffset.z = pSights->GetFloat("up", 0.0f);
+
+		angIronsightAngOffset[PITCH] = pSights->GetFloat("pitch", 0.0f);
+		angIronsightAngOffset[YAW] = pSights->GetFloat("yaw", 0.0f);
+		angIronsightAngOffset[ROLL] = pSights->GetFloat("roll", 0.0f);
+
+		flIronsightFOVOffset = pSights->GetFloat("fov", 0.0f);
+
+		m_bhasIronsight = true;
+	}
+	else
+	{
+		//note: you can set a bool here if you'd like to disable ironsights for weapons with no IronSight-key
+		vecIronsightPosOffset = vec3_origin;
+		angIronsightAngOffset.Init();
+		flIronsightFOVOffset = 0.0f;
+		m_bhasIronsight = false;
+	}
+#endif
+
 	// Now read the weapon sounds
 	memset( aShootSounds, 0, sizeof( aShootSounds ) );
 	KeyValues *pSoundData = pKeyValuesData->FindKey( "SoundData" );

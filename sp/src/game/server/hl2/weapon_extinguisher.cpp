@@ -37,7 +37,7 @@ class CWeaponExtinguisher: public CHLSelectFireMachineGun
 public:
 	DECLARE_CLASS( CWeaponExtinguisher, CHLSelectFireMachineGun );
 
-	DECLARE_SERVERCLASS();
+	//DECLARE_SERVERCLASS();
 
 	CWeaponExtinguisher();
 
@@ -56,8 +56,8 @@ protected:
 	CExtinguisherJet	*m_pJet;
 };
 
-IMPLEMENT_SERVERCLASS_ST(CWeaponExtinguisher, DT_WeaponExtinguisher)
-END_SEND_TABLE()
+//IMPLEMENT_SERVERCLASS_ST(CWeaponExtinguisher, DT_WeaponExtinguisher)
+//END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( weapon_extinguisher, CWeaponExtinguisher );
 PRECACHE_WEAPON_REGISTER( weapon_extinguisher );
@@ -141,7 +141,7 @@ void CWeaponExtinguisher::Event_Killed( const CTakeDamageInfo &info )
 	//Put out fire in a radius
 	FireSystem_ExtinguishInRadius( GetAbsOrigin(), fire_extinguisher_explode_radius.GetInt(), fire_extinguisher_explode_strength.GetFloat() );
 
-	SetThink( SUB_Remove );
+	SetThink( &CBaseEntity::SUB_Remove );
 	SetNextThink( gpGlobals->curtime + 0.1f );
 }
 
@@ -355,7 +355,7 @@ void CExtinguisherCharger::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 
 	SetNextThink( gpGlobals->curtime + 0.25 );
 	
-	SetThink( TurnOff );
+	SetThink( &CExtinguisherCharger::TurnOff );
 
 	CBasePlayer	*pPlayer = ToBasePlayer( pActivator );
 

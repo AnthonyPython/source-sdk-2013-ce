@@ -50,7 +50,7 @@
 // Used for scientists and barneys
 //=========================================================
 
-#define TLK_CFRIENDS		4
+#define TLK_CFRIENDS		9
 
 //=============================================================================
 // >> CNPCSimpleTalker

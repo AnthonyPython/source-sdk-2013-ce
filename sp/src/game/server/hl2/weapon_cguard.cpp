@@ -16,6 +16,7 @@
 #include "energy_wave.h"
 #include "te_particlesystem.h"
 #include "ndebugoverlay.h"
+#include "hl2_shareddefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -185,7 +186,10 @@ void CreateConcussiveBlast( const Vector &origin, const Vector &surfaceNormal, C
 
 // Combine Guard weapon
 
-#if 0
+#ifdef hl2_Combine_Guard_weapon
+
+#define NEW_AUTOAIM_RADIUS 500
+#define NEW_AUTOAIM_DIST 1024
 
 class CWeaponCGuard : public CBaseHLCombatWeapon
 {
@@ -193,7 +197,7 @@ class CWeaponCGuard : public CBaseHLCombatWeapon
 public:
 	DECLARE_CLASS( CWeaponCGuard, CBaseHLCombatWeapon );
 
-	DECLARE_SERVERCLASS();
+	//DECLARE_SERVERCLASS();
 
 	CWeaponCGuard( void );
 	
@@ -218,8 +222,8 @@ protected:
 };
 
 
-IMPLEMENT_SERVERCLASS_ST(CWeaponCGuard, DT_WeaponCGuard)
-END_SEND_TABLE()
+//IMPLEMENT_SERVERCLASS_ST(CWeaponCGuard, DT_WeaponCGuard)
+//END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( weapon_cguard, CWeaponCGuard );
 PRECACHE_WEAPON_REGISTER( weapon_cguard );
@@ -283,7 +287,7 @@ void CWeaponCGuard::AlertTargets( void )
 
 	// Fire the bullets
 	Vector vecSrc	 = pPlayer->Weapon_ShootPosition( );
-	Vector vecAiming = pPlayer->GetRadialAutoVector( NEW_AUTOAIM_RADIUS, NEW_AUTOAIM_DIST );
+	Vector vecAiming = pPlayer->GetAutoaimVector( NEW_AUTOAIM_RADIUS, NEW_AUTOAIM_DIST );
 
 	Vector	impactPoint	= vecSrc + ( vecAiming * MAX_TRACE_LENGTH );
 
@@ -437,7 +441,7 @@ void CWeaponCGuard::DelayedFire( void )
 
 	// Fire the bullets
 	Vector vecSrc	 = pPlayer->Weapon_ShootPosition( );
-	Vector vecAiming = pPlayer->GetRadialAutoVector( NEW_AUTOAIM_RADIUS, NEW_AUTOAIM_DIST );
+	Vector vecAiming = pPlayer->GetAutoaimVector( NEW_AUTOAIM_RADIUS, NEW_AUTOAIM_DIST );
 
 	//Factor in the view kick
 	AddViewKick();

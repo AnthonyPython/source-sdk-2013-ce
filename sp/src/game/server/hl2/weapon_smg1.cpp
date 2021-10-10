@@ -50,8 +50,22 @@ public:
 
 	virtual const Vector& GetBulletSpread( void )
 	{
+#ifdef use_ironsight
+		if (m_bIsIronsighted)
+		{
+			static const Vector cone = VECTOR_CONE_1DEGREES;
+			return cone;
+		}
+		else
+		{
+			static const Vector cone = VECTOR_CONE_5DEGREES;
+			return cone;
+		}
+#else
 		static const Vector cone = VECTOR_CONE_5DEGREES;
 		return cone;
+#endif
+		
 	}
 
 	const WeaponProficiencyInfo_t *GetProficiencyValues();

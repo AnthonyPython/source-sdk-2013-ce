@@ -33,6 +33,7 @@ public:
 	void DeathSound( const CTakeDamageInfo &info );
 	void AttackSound( void );
 	void GrowlSound( void );
+	void BiteSound(void);
 
 	float MaxYawSpeed ( void );
 
@@ -56,6 +57,7 @@ public:
 
 	void StartTask ( const Task_t *pTask );
 	void RunTask ( const Task_t *pTask );
+
 
 	NPC_STATE SelectIdealState ( void );
 

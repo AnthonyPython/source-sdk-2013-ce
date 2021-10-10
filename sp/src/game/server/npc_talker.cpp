@@ -42,6 +42,11 @@ char *CNPCSimpleTalker::m_szFriends[TLK_CFRIENDS] =
 	"NPC_barney",
 	"NPC_scientist",
 	"NPC_sitting_scientist",
+	"monster_barney",
+	"monster_scientist",
+	"monster_sitting_scientist",
+	"npc_crow",
+	"npc_citizen",
 	NULL,
 };
 
@@ -652,7 +657,7 @@ int CNPCSimpleTalker::FIdleSpeak( void )
 	}
 
 	// ROBIN: Disabled idle question & answer for now
-	/*
+	
 	// if there is a friend nearby to speak to, play sentence, set friend's response time, return
 	CBaseEntity *pFriend = FindNearestFriend(false);
 
@@ -666,8 +671,13 @@ int CNPCSimpleTalker::FIdleSpeak( void )
 			if (pTalkNPC && !pTalkNPC->HasSpawnFlags(SF_NPC_GAG) && !pTalkNPC->IsInAScript() )
 			{
 				SetSpeechTarget( pFriend );
-				pTalkNPC->SetAnswerQuestion( this );
+				// play response
+				SpeakAnswerFriend(GetSpeechTarget());
+				//pTalkNPC->SetAnswerQuestion( this );
+				
+				//pTalkNPC->GetExpresser()->SpeakRawSentence("SC_ANSWER", GetExpresser()->GetTimeSpeechComplete() +2, 1.0, SNDLVL_TALKING, this);
 				pTalkNPC->GetExpresser()->BlockSpeechUntil( GetExpresser()->GetTimeSpeechComplete() );
+				//SENTENCEG_PlayRndSz(pTalkNPC->edict(), "SC_ANSWER", 1.0, SNDLVL_TALKING, 0, pitch);
 
 				m_nSpeak++;
 			}
@@ -677,10 +687,10 @@ int CNPCSimpleTalker::FIdleSpeak( void )
 			return true;
 		}
 	}
-	*/
+	
 
 	// Otherwise, play an idle statement, try to face client when making a statement.
-	CBaseEntity *pFriend = FindNearestFriend(true);
+	pFriend = FindNearestFriend(true);
 	if ( pFriend )
 	{
 		SetSpeechTarget( pFriend );

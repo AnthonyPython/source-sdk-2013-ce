@@ -13,7 +13,10 @@
 #endif
 
 #include "const.h"
-
+#define HL1_NPC
+#define hl2_Combine_Guard_weapon
+#define hl2_flaregun
+#define use_ironsight
 
 //--------------------------------------------------------------------------
 // Collision groups

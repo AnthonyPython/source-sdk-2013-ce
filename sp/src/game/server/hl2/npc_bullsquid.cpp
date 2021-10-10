@@ -13,6 +13,9 @@
 #include "AI_Navigator.h"
 #include "AI_Motor.h"
 #include "ai_squad.h"
+#include "ai_route.h"
+#include "ai_basenpc.h"
+#include "ai_pathfinder.h"
 #include "npc_bullsquid.h"
 #include "npcevent.h"
 #include "soundent.h"
@@ -29,6 +32,7 @@
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 #include "movevars_shared.h"
+#include "hl2_shareddefs.h"
 
 #include "AI_Hint.h"
 #include "AI_Senses.h"
@@ -87,9 +91,11 @@ int	g_interactionBullsquidThrow		= 0;
 #define		BSQUID_AE_HOP		( 5 )
 #define		BSQUID_AE_THROW		( 6 )
 #define		BSQUID_AE_WHIP_SND	( 7 )
+//#define		BSQUID_AE_TAILWHIP	( 8 )
 
-LINK_ENTITY_TO_CLASS( npc_bullsquid, CNPC_Bullsquid );
-
+#ifdef HL1_NPC
+LINK_ENTITY_TO_CLASS( monster_bullsquid, CNPC_Bullsquid );
+#endif
 int ACT_SQUID_EXCITED;
 int ACT_SQUID_EAT;
 int ACT_SQUID_DETECT_SCENT;
@@ -161,6 +167,7 @@ void CNPC_Bullsquid::Precache()
 	PrecacheScriptSound( "NPC_Bullsquid.Attack1" );
 	PrecacheScriptSound( "NPC_Bullsquid.Growl" );
 	PrecacheScriptSound( "NPC_Bullsquid.TailWhip");
+	PrecacheScriptSound( "NPC_Bullsquid.Bite");
 
 	BaseClass::Precache();
 }
@@ -213,6 +220,14 @@ void CNPC_Bullsquid::DeathSound( const CTakeDamageInfo &info )
 void CNPC_Bullsquid::AttackSound( void )
 {
 	EmitSound( "NPC_Bullsquid.Attack1" );
+}
+
+//=========================================================
+// AttackSound
+//=========================================================
+void CNPC_Bullsquid::BiteSound(void)
+{
+	EmitSound("NPC_Bullsquid.Bite");
 }
 
 //=========================================================
@@ -300,7 +315,7 @@ void CNPC_Bullsquid::HandleAnimEvent( animevent_t *pEvent )
 
 		case BSQUID_AE_BITE:
 		{
-		// SOUND HERE!
+			BiteSound();
 			CBaseEntity *pHurt = CheckTraceHullAttack( 70, Vector(-16,-16,-16), Vector(16,16,16), sk_bullsquid_dmg_bite.GetFloat(), DMG_SLASH );
 			if ( pHurt )
 			{
@@ -318,8 +333,13 @@ void CNPC_Bullsquid::HandleAnimEvent( animevent_t *pEvent )
 			break;
 		}
 
-/*
-		case BSQUID_AE_TAILWHIP:
+		case AE_NPC_BODYDROP_HEAVY:
+		{
+			
+			break;
+		}
+
+/*		case BSQUID_AE_TAILWHIP:
 		{
 			CBaseEntity *pHurt = CheckTraceHullAttack( 70, Vector(-16,-16,-16), Vector(16,16,16), sk_bullsquid_dmg_whip.GetFloat(), DMG_SLASH | DMG_ALWAYSGIB );
 			if ( pHurt ) 
@@ -334,7 +354,7 @@ void CNPC_Bullsquid::HandleAnimEvent( animevent_t *pEvent )
 			}
 		}
 		break;
-*/
+		*/
 
 		case BSQUID_AE_BLINK:
 		{
@@ -368,6 +388,7 @@ void CNPC_Bullsquid::HandleAnimEvent( animevent_t *pEvent )
 
 				if ( pHurt )
 				{
+					BiteSound();
 					pHurt->ViewPunch( QAngle(20,0,-20) );
 							
 					// screeshake transforms the viewmodel as well as the viewangle. No problems with seeing the ends of the viewmodels.
@@ -491,14 +512,18 @@ void CNPC_Bullsquid::RemoveIgnoredConditions( void )
 	if ( GetEnemy() != NULL )
 	{
 		// ( Unless after a tasty headcrab, yumm ^_^ )
-		if ( FClassnameIs( GetEnemy(), "monster_headcrab" ) )
+		if ( FClassnameIs( GetEnemy(), "npc_headcrab" ) || FClassnameIs(GetEnemy(), "npc_headcrab_fast")
+			|| FClassnameIs(GetEnemy(), "npc_headcrab_poison") || FClassnameIs(GetEnemy(), "npc_headcrab_black") 
+			|| FClassnameIs(GetEnemy(), "monster_headcrab"))
 			 ClearCondition( COND_SMELL );
 	}
 }
 
 Disposition_t CNPC_Bullsquid::IRelationType( CBaseEntity *pTarget )
 {
-	if ( gpGlobals->curtime - m_flLastHurtTime < 5 && FClassnameIs( pTarget, "monster_headcrab" ) )
+	if ( gpGlobals->curtime - m_flLastHurtTime < 5 && (FClassnameIs( pTarget, "npc_headcrab" ) || FClassnameIs(pTarget, "npc_headcrab_fast")
+		|| FClassnameIs(pTarget, "npc_headcrab_poison") || FClassnameIs(pTarget, "npc_headcrab_black") 
+		|| FClassnameIs(pTarget, "monster_headcrab")))
 	{
 		// if squid has been hurt in the last 5 seconds, and is getting relationship for a headcrab, 
 		// tell squid to disregard crab. 
@@ -515,35 +540,47 @@ Disposition_t CNPC_Bullsquid::IRelationType( CBaseEntity *pTarget )
 int CNPC_Bullsquid::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
 
-#if 0 //Fix later.
 
+#ifdef HL1_NPC
 	float flDist;
-	Vector vecApex, vOffset;
+	Vector vecApex, vOffset = vec3_origin;
+
+	CBaseEntity* pevAttacker = inputInfo.GetAttacker();
+
+
 
 	// if the squid is running, has an enemy, was hurt by the enemy, hasn't been hurt in the last 3 seconds, and isn't too close to the enemy,
 	// it will swerve. (whew).
+
 	if ( GetEnemy() != NULL && IsMoving() && pevAttacker == GetEnemy() && gpGlobals->curtime - m_flLastHurtTime > 3 )
 	{
 		flDist = ( GetAbsOrigin() - GetEnemy()->GetAbsOrigin() ).Length2D();
 		
 		if ( flDist > SQUID_SPRINT_DIST )
 		{
-			AI_Waypoint_t*	pRoute = GetNavigator()->GetPath()->Route();
+			AI_Waypoint_t*	pRoute = GetNavigator()->GetPath()->GetCurWaypoint();
 
 			if ( pRoute )
 			{
+				
 				flDist = ( GetAbsOrigin() - pRoute[ pRoute->iNodeID ].vecLocation ).Length2D();// reusing flDist. 
 
-				if ( GetNavigator()->GetPath()->BuildTriangulationRoute( GetAbsOrigin(), pRoute[ pRoute->iNodeID ].vecLocation, flDist * 0.5, GetEnemy(), &vecApex, &vOffset, NAV_GROUND ) )
+				vecApex = Vector(0, 0, 1);//GetPathfinder()->BuildTriangulationRoute(GetAbsOrigin(), pRoute[pRoute->iNodeID].vecLocation, GetEnemy(), NULL,NULL, 0.0, flDist * 0.5, NAV_GROUND)->GetPos();
+
+				//if ( GetNavigator()->GetPath()->BuildTriangulationRoute( GetAbsOrigin(), pRoute[ pRoute->iNodeID ].vecLocation, flDist * 0.5, GetEnemy(), &vecApex, &vOffset, NAV_GROUND ) )
+
+				if (vecApex != vec3_origin)
 				{
-					GetNavigator()->PrependWaypoint( vecApex, bits_WP_TO_DETOUR | bits_WP_DONT_SIMPLIFY );
+					GetNavigator()->PrependWaypoint( vecApex, NAV_GROUND, bits_WP_TO_DETOUR | bits_WP_DONT_SIMPLIFY );
 				}
 			}
 		}
 	}
 #endif
 
-	if ( !FClassnameIs( inputInfo.GetAttacker(), "monster_headcrab" ) )
+	if ( !(FClassnameIs( inputInfo.GetAttacker(), "npc_headcrab" ) || FClassnameIs(inputInfo.GetAttacker(), "npc_headcrab_fast")
+		|| FClassnameIs(inputInfo.GetAttacker(), "npc_headcrab_poison") || FClassnameIs(inputInfo.GetAttacker(), "npc_headcrab_black")
+		|| FClassnameIs(inputInfo.GetAttacker(), "monster_headcrab")))
 	{
 		// don't forget about headcrabs if it was a headcrab that hurt the squid.
 		m_flLastHurtTime = gpGlobals->curtime;
@@ -694,7 +731,9 @@ int CNPC_Bullsquid::SelectSchedule( void )
 
 			if ( HasCondition( COND_NEW_ENEMY ) )
 			{
-				if ( m_fCanThreatDisplay && IRelationType( GetEnemy() ) == D_HT && FClassnameIs( GetEnemy(), "monster_headcrab" ) )
+				if ( m_fCanThreatDisplay && IRelationType( GetEnemy() ) == D_HT && (FClassnameIs( GetEnemy(), "npc_headcrab" )|| FClassnameIs(GetEnemy(), "npc_headcrab_fast"))
+					|| FClassnameIs(GetEnemy(), "npc_headcrab_poison") || FClassnameIs(GetEnemy(), "npc_headcrab_black")
+					|| FClassnameIs(GetEnemy(), "monster_headcrab"))
 				{
 					// this means squid sees a headcrab!
 					m_fCanThreatDisplay = FALSE;// only do the headcrab dance once per lifetime.
@@ -863,7 +902,9 @@ NPC_STATE CNPC_Bullsquid::SelectIdealState( void )
 		case NPC_STATE_COMBAT:
 		{
 			// COMBAT goes to ALERT upon death of enemy
-			if ( GetEnemy() != NULL && ( HasCondition( COND_LIGHT_DAMAGE ) || HasCondition( COND_HEAVY_DAMAGE ) ) && FClassnameIs( GetEnemy(), "monster_headcrab" ) )
+			if ( GetEnemy() != NULL && ( HasCondition( COND_LIGHT_DAMAGE ) || HasCondition( COND_HEAVY_DAMAGE ) ) && (FClassnameIs( GetEnemy(), "npc_headcrab" ) || FClassnameIs(GetEnemy(), "npc_headcrab_fast")
+				|| FClassnameIs(GetEnemy(), "npc_headcrab_poison") || FClassnameIs(GetEnemy(), "npc_headcrab_black") 
+				|| FClassnameIs(GetEnemy(), "monster_headcrab")) )
 			{
 				// if the squid has a headcrab enemy and something hurts it, it's going to forget about the crab for a while.
 				SetEnemy( NULL );
@@ -883,7 +924,7 @@ NPC_STATE CNPC_Bullsquid::SelectIdealState( void )
 //
 //------------------------------------------------------------------------------
 
-AI_BEGIN_CUSTOM_NPC( npc_bullsquid, CNPC_Bullsquid )
+AI_BEGIN_CUSTOM_NPC( monster_bullsquid, CNPC_Bullsquid )
 
 	DECLARE_TASK( TASK_SQUID_HOPTURN )
 	DECLARE_TASK( TASK_SQUID_EAT )

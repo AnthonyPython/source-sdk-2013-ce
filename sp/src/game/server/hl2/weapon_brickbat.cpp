@@ -28,8 +28,11 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern ConVar sk_npc_dmg_brickbat;
-extern ConVar sk_plr_dmg_brickbat;
+//extern ConVar sk_npc_dmg_brickbat;
+//extern ConVar sk_plr_dmg_brickbat;
+
+ConVar    sk_npc_dmg_brickbat("sk_npc_dmg_brickbat", "0");
+ConVar    sk_plr_dmg_brickbat("sk_plr_dmg_brickbat", "0");
 
 struct BrickbatAmmo_s
 {
@@ -46,8 +49,8 @@ BrickbatAmmo_s	BrickBatAmmoArray[NUM_BRICKBAT_AMMO_TYPES] =
 	{ "grenade_beerbottle",		BRICKBAT_BOTTLE,		3,	"models/weapons/v_bb_bottle.mdl",		"models/weapons/w_bb_bottle.mdl" },
 };
 
-IMPLEMENT_SERVERCLASS_ST(CWeaponBrickbat, DT_WeaponBrickbat)
-END_SEND_TABLE()
+//IMPLEMENT_SERVERCLASS_ST(CWeaponBrickbat, DT_WeaponBrickbat)
+//END_SEND_TABLE()
 
 //LINK_ENTITY_TO_CLASS( weapon_brickbat, CWeaponBrickbat );
 //PRECACHE_WEAPON_REGISTER(weapon_brickbat);
@@ -146,7 +149,7 @@ bool CWeaponBrickbat::Deploy( void )
 //------------------------------------------------------------------------------
 void CWeaponBrickbat::SetPickupTouch( void )
 {
-	SetTouch( BrickbatTouch );
+	SetTouch( &CWeaponBrickbat::BrickbatTouch );
 }
 
 

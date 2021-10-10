@@ -62,6 +62,41 @@ CBaseViewModel::~CBaseViewModel()
 {
 }
 
+#ifdef use_ironsight
+void CBaseViewModel::CalcIronsights(Vector& pos, QAngle& ang)
+{
+	CBaseCombatWeapon* pWeapon = GetOwningWeapon();
+
+	if (!pWeapon)
+		return;
+
+	//get delta time for interpolation
+	float delta = (gpGlobals->curtime - pWeapon->m_flIronsightedTime) * 2.5f; //modify this value to adjust how fast the interpolation is
+	float exp = (pWeapon->IsIronsighted()) ?
+		(delta > 1.0f) ? 1.0f : delta : //normal blending
+		(delta > 1.0f) ? 0.0f : 1.0f - delta; //reverse interpolation
+
+	if (exp <= 0.001f) //fully not ironsighted; save performance
+		return;
+
+	Vector newPos = pos;
+	QAngle newAng = ang;
+
+	Vector vForward, vRight, vUp, vOffset;
+	AngleVectors(newAng, &vForward, &vRight, &vUp);
+	vOffset = pWeapon->GetIronsightPositionOffset();
+
+	newPos += vForward * vOffset.x;
+	newPos += vRight * vOffset.y;
+	newPos += vUp * vOffset.z;
+	newAng += pWeapon->GetIronsightAngleOffset();
+	//fov is handled by CBaseCombatWeapon
+
+	pos += (newPos - pos) * exp;
+	ang += (newAng - ang) * exp;
+}
+#endif
+
 void CBaseViewModel::UpdateOnRemove( void )
 {
 	BaseClass::UpdateOnRemove();
@@ -384,6 +419,7 @@ void CBaseViewModel::SendViewModelMatchingSequence( int sequence )
 
 void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePosition, const QAngle& eyeAngles )
 {
+#ifndef use_ironsight
 	// UNDONE: Calc this on the server?  Disabled for now as it seems unnecessary to have this info on the server
 #if defined( CLIENT_DLL )
 	QAngle vmangoriginal = eyeAngles;
@@ -454,6 +490,51 @@ void CBaseViewModel::CalcViewModelView( CBasePlayer *owner, const Vector& eyePos
 
 		SetLocalAngles( vmangles );
 	}
+#endif
+#endif
+#else
+	// UNDONE: Calc this on the server?  Disabled for now as it seems unnecessary to have this info on the server
+#if defined( CLIENT_DLL )
+	QAngle vmangoriginal = eyeAngles;
+	QAngle vmangles = eyeAngles;
+	Vector vmorigin = eyePosition;
+
+	CBaseCombatWeapon* pWeapon = m_hWeapon.Get();
+	//Allow weapon lagging
+	//only if not in ironsight-mode
+	if (pWeapon == NULL || !pWeapon->IsIronsighted())
+	{
+		if (pWeapon != NULL)
+		{
+#if defined( CLIENT_DLL )
+			if (!prediction->InPrediction())
+#endif
+			{
+				// add weapon-specific bob 
+				pWeapon->AddViewmodelBob(this, vmorigin, vmangles);
+			}
+		}
+
+		// Add model-specific bob even if no weapon associated (for head bob for off hand models)
+		AddViewModelBob(owner, vmorigin, vmangles);
+
+		// Add lag
+		CalcViewModelLag(vmorigin, vmangles, vmangoriginal);
+
+#if defined( CLIENT_DLL )
+		if (!prediction->InPrediction())
+		{
+			// Let the viewmodel shake at about 10% of the amplitude of the player's view
+			vieweffects->ApplyShake(vmorigin, vmangles, 0.1);
+		}
+#endif
+	}
+
+	CalcIronsights(vmorigin, vmangles);
+
+	SetLocalOrigin(vmorigin);
+	SetLocalAngles(vmangles);
+
 #endif
 #endif
 

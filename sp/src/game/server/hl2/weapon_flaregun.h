@@ -95,7 +95,7 @@ class CFlaregun:public CBaseHLCombatWeapon
 public:
 	DECLARE_CLASS( CFlaregun, CBaseHLCombatWeapon );
 
-	DECLARE_SERVERCLASS();
+	//DECLARE_SERVERCLASS();
 
 	void Precache( void );
 	void PrimaryAttack( void );

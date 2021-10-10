@@ -76,6 +76,9 @@ public:
 	void					DestroyControlPanels();
 	void					SetControlPanelsActive( bool bState );
 	void					ShowControlPanells( bool show );
+#ifdef use_ironsight
+	void		CalcIronsights(Vector& pos, QAngle& ang);
+#endif
 
 	virtual CBaseCombatWeapon *GetOwningWeapon( void );
 	

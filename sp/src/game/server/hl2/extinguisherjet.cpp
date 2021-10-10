@@ -17,12 +17,12 @@
 extern ConVar fire_extinguisher_debug;
 
 //Networking
-IMPLEMENT_SERVERCLASS_ST( CExtinguisherJet, DT_ExtinguisherJet )
+/*IMPLEMENT_SERVERCLASS_ST(CExtinguisherJet, DT_ExtinguisherJet)
 	SendPropInt(SENDINFO(m_bEmit), 1, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_bUseMuzzlePoint), 1, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nLength), 32, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nSize), 32, SPROP_UNSIGNED),
-END_SEND_TABLE()
+END_SEND_TABLE()*/
 
 //Save/restore
 BEGIN_DATADESC( CExtinguisherJet )
@@ -101,7 +101,7 @@ void CExtinguisherJet::TurnOn( void )
 		m_bEnabled = m_bEmit = true;
 	}
 	
-	SetThink( ExtinguishThink );
+	SetThink( &CExtinguisherJet::ExtinguishThink );
 	SetNextThink( gpGlobals->curtime + 0.1f );
 }
 

@@ -209,6 +209,11 @@ private:
 	COutputEvent m_OnClose;					// Triggered when the door is told to close.
 	COutputEvent m_OnOpen;					// Triggered when the door is told to open.
 	COutputEvent m_OnLockedUse;				// Triggered when the user tries to open a locked door.
+
+public:
+
+		void BreakDoors(Vector vecOrigin, AngularImpulse angImpulse);
+		void BreakDoor(Vector vecOrigin, AngularImpulse angImpulse);
 };
 
 

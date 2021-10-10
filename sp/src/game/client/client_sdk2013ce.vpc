@@ -31,6 +31,21 @@ $Project "Client"
 		{
 		}
 
+		$Folder	"HLSS DLL"
+		{
+			$File	"hlss\c_weapon_camera.cpp"
+			$File	"hlss\c_weapon_turret.cpp"
+		}
+
+		$Folder	"HL1 DLL"
+		{
+			//$File	"hl2\c_npc_aliencontroller.cpp"
+			$File	"hlss\c_npc_mantaray.cpp"
+			$File	"hlss\c_prop_crystal.cpp"
+			$File	"hlss\c_prop_xenplant.cpp"
+			$File	"$SRCDIR\game\shared\episodic\mantaray_shared.h"
+		}
+
 		$Folder	"HL2 DLL"
 		{
 			$File	"$SRCDIR\game\shared\hl2\basehlcombatweapon_shared.cpp"

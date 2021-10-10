@@ -15,6 +15,8 @@
 #include "engine/IEngineSound.h"
 #include "weapon_flaregun.h"
 
+#include "hl2_shareddefs.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -657,10 +659,10 @@ void CFlare::AddToActiveFlares( void )
 	}
 }
 
-#if 0
+#ifdef hl2_flaregun
 
-IMPLEMENT_SERVERCLASS_ST(CFlaregun, DT_Flaregun)
-END_SEND_TABLE()
+//IMPLEMENT_SERVERCLASS_ST(CFlaregun, DT_Flaregun)
+//END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( weapon_flaregun, CFlaregun );
 PRECACHE_WEAPON_REGISTER( weapon_flaregun );

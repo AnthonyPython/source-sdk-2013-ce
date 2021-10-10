@@ -89,7 +89,8 @@ enum Disposition_t
 	D_HT,		// Hate
 	D_FR,		// Fear
 	D_LI,		// Like
-	D_NU		// Neutral
+	D_NU,		// Neutral
+	D_DL        // Dislike
 };
 
 const int DEF_RELATIONSHIP_PRIORITY = INT_MIN;
@@ -363,6 +364,8 @@ public:
 	static void			AllocateDefaultRelationships( );
 	static void			SetDefaultRelationship( Class_T nClass, Class_T nClassTarget,  Disposition_t nDisposition, int nPriority );
 	Disposition_t		GetDefaultRelationshipDisposition( Class_T nClassTarget );
+	//TERO: this one added by me
+	static Disposition_t		GetDefaultRelationshipDispositionBetweenClasses(Class_T nClassTarget1, Class_T nClassTarget2);
 	virtual void		AddEntityRelationship( CBaseEntity *pEntity, Disposition_t nDisposition, int nPriority );
 	virtual bool		RemoveEntityRelationship( CBaseEntity *pEntity );
 	virtual void		AddClassRelationship( Class_T nClass, Disposition_t nDisposition, int nPriority );

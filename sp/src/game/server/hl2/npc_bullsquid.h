@@ -34,19 +34,23 @@ public:
 	void AttackSound( void );
 	void GrowlSound( void );
 	void BiteSound(void);
+	bool IsHeavyDamage(const CTakeDamageInfo& info);
+	bool IsLightDamage(const CTakeDamageInfo& info);
 
 	float MaxYawSpeed ( void );
 
 	void HandleAnimEvent( animevent_t *pEvent );
 
-	int RangeAttack1Conditions( float flDot, float flDist );
-	int MeleeAttack1Conditions( float flDot, float flDist );
-	int MeleeAttack2Conditions( float flDot, float flDist );
+	virtual int RangeAttack1Conditions( float flDot, float flDist );
+	virtual int MeleeAttack1Conditions( float flDot, float flDist );
+	virtual int MeleeAttack2Conditions( float flDot, float flDist );
 
 	bool FValidateHintType ( CAI_Hint *pHint );
 	void RemoveIgnoredConditions( void );
 	Disposition_t IRelationType( CBaseEntity *pTarget );
 	int OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo );
+
+	virtual int TranslateSchedule(int scheduleType);
 
 	int GetSoundInterests ( void );
 	void RunAI ( void );
@@ -57,7 +61,7 @@ public:
 
 	void StartTask ( const Task_t *pTask );
 	void RunTask ( const Task_t *pTask );
-
+	
 
 	NPC_STATE SelectIdealState ( void );
 

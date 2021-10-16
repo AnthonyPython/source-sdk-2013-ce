@@ -13,6 +13,10 @@
 
 #define ACTIVITY_NOT_AVAILABLE		-1
 
+// EXPANDED NAVIGATION ACTIVITIES
+// This enables some new navigation-related activities.
+#define EXPANDED_NAVIGATION_ACTIVITIES 1
+
 typedef enum
 {
 	ACT_INVALID = -1,			// So we have something more succint to check for than '-1'
@@ -2106,6 +2110,15 @@ typedef enum
 	ACT_SPELL_VM_IDLE, 
 	ACT_SPELL_VM_ARM, 
 	ACT_SPELL_VM_FIRE,
+
+#ifdef EXPANDED_NAVIGATION_ACTIVITIES
+	ACT_CLIMB_ALL,	// An actual blend animation which uses pose parameters for direction
+	ACT_CLIMB_IDLE,
+
+	ACT_CLIMB_MOUNT_TOP,
+	ACT_CLIMB_MOUNT_BOTTOM,
+	ACT_CLIMB_DISMOUNT_BOTTOM,
+#endif
 
 	// this is the end of the global activities, private per-monster activities start here.
 	LAST_SHARED_ACTIVITY,

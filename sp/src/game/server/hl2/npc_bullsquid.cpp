@@ -33,6 +33,7 @@
 #include "engine/IEngineSound.h"
 #include "movevars_shared.h"
 #include "hl2_shareddefs.h"
+#include "ai_interactions.h"
 
 #include "AI_Hint.h"
 #include "AI_Senses.h"
@@ -56,6 +57,7 @@ enum
 	SCHED_SQUID_EAT,
 	SCHED_SQUID_SNIFF_AND_EAT,
 	SCHED_SQUID_WALLOW,
+	SCHED_SQUID_MELEE_ATTACK2,
 };
 
 //=========================================================
@@ -73,6 +75,7 @@ enum
 enum
 {
 	COND_SQUID_SMELL_FOOD	= LAST_SHARED_CONDITION + 1,
+	COND_SQUID_IGNORE_DAMAGE,
 };
 
 
@@ -91,7 +94,7 @@ int	g_interactionBullsquidThrow		= 0;
 #define		BSQUID_AE_HOP		( 5 )
 #define		BSQUID_AE_THROW		( 6 )
 #define		BSQUID_AE_WHIP_SND	( 7 )
-//#define		BSQUID_AE_TAILWHIP	( 8 )
+#define		BSQUID_AE_TAILWHIP	( 8 )
 
 #ifdef HL1_NPC
 LINK_ENTITY_TO_CLASS( monster_bullsquid, CNPC_Bullsquid );
@@ -339,7 +342,7 @@ void CNPC_Bullsquid::HandleAnimEvent( animevent_t *pEvent )
 			break;
 		}
 
-/*		case BSQUID_AE_TAILWHIP:
+		case BSQUID_AE_TAILWHIP:
 		{
 			CBaseEntity *pHurt = CheckTraceHullAttack( 70, Vector(-16,-16,-16), Vector(16,16,16), sk_bullsquid_dmg_whip.GetFloat(), DMG_SLASH | DMG_ALWAYSGIB );
 			if ( pHurt ) 
@@ -354,7 +357,7 @@ void CNPC_Bullsquid::HandleAnimEvent( animevent_t *pEvent )
 			}
 		}
 		break;
-		*/
+		
 
 		case BSQUID_AE_BLINK:
 		{
@@ -466,7 +469,7 @@ int CNPC_Bullsquid::RangeAttack1Conditions( float flDot, float flDist )
 //=========================================================
 int CNPC_Bullsquid::MeleeAttack1Conditions( float flDot, float flDist )
 {
-	if ( GetEnemy()->m_iHealth <= sk_bullsquid_dmg_whip.GetFloat() && flDist <= 85 && flDot >= 0.7 )
+	if ( GetEnemy()->m_iHealth <= sk_bullsquid_dmg_whip.GetFloat() && flDist <= 85 && flDot >= 0.7 && !(FClassnameIs(GetEnemy(), "npc_headcrab")))
 	{
 		return ( COND_CAN_MELEE_ATTACK1 );
 	}
@@ -533,6 +536,66 @@ Disposition_t CNPC_Bullsquid::IRelationType( CBaseEntity *pTarget )
 	return BaseClass::IRelationType( pTarget );
 }
 
+int CNPC_Bullsquid::TranslateSchedule(int scheduleType)
+{
+	switch (scheduleType)
+	{
+	case SCHED_MELEE_ATTACK2:
+	{
+		return SCHED_SQUID_MELEE_ATTACK2;
+		//if ((gpGlobals->curtime - m_flLastHurtTime > 0.2))
+		//{
+		//	return SCHED_MELEE_ATTACK2;
+			
+		//}
+		//else
+		//{
+			
+		//}
+
+		//return SCHED_SQUID_MELEE_ATTACK2;
+
+	}
+	break;
+
+	return BaseClass::TranslateSchedule(scheduleType);
+	}
+
+	return BaseClass::TranslateSchedule(scheduleType);
+}
+
+bool CNPC_Bullsquid::IsHeavyDamage(const CTakeDamageInfo& info)
+{
+#ifdef HL2_EPISODIC
+
+	// Don't randomly flinch if I'm melee attacking
+	if (!HasCondition(COND_CAN_MELEE_ATTACK1) || !HasCondition(COND_CAN_MELEE_ATTACK2))
+	{
+		Forget(bits_MEMORY_FLINCHED);
+
+		return true;
+	}
+#endif // HL2_EPISODIC
+
+	return BaseClass::IsHeavyDamage(info);
+}
+
+bool CNPC_Bullsquid::IsLightDamage(const CTakeDamageInfo& info)
+{
+#ifdef HL2_EPISODIC
+
+	// Don't randomly flinch if I'm melee attacking
+	if (!HasCondition(COND_CAN_MELEE_ATTACK1) || !HasCondition(COND_CAN_MELEE_ATTACK2))
+	{
+		Forget(bits_MEMORY_FLINCHED);
+
+		return true;
+	}
+#endif // HL2_EPISODIC
+
+	return BaseClass::IsLightDamage(info);
+}
+
 //=========================================================
 // TakeDamage - overridden for bullsquid so we can keep track
 // of how much time has passed since it was last injured
@@ -547,7 +610,9 @@ int CNPC_Bullsquid::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 
 	CBaseEntity* pevAttacker = inputInfo.GetAttacker();
 
+	DevWarning("Bullsquid last time hurt: %f", gpGlobals->curtime - m_flLastHurtTime);
 
+	
 
 	// if the squid is running, has an enemy, was hurt by the enemy, hasn't been hurt in the last 3 seconds, and isn't too close to the enemy,
 	// it will swerve. (whew).
@@ -683,6 +748,9 @@ void CNPC_Bullsquid::RunAI( void )
 //=========================================================
 int CNPC_Bullsquid::SelectSchedule( void )
 {
+
+	
+
 	switch	( m_NPCState )
 	{
 	case NPC_STATE_ALERT:
@@ -776,13 +844,20 @@ int CNPC_Bullsquid::SelectSchedule( void )
 				return SCHED_MELEE_ATTACK2;
 			}
 			
+			
 			return SCHED_CHASE_ENEMY;
 
 			break;
 		}
 	}
+	int nSchedule = BaseClass::SelectSchedule();
+	if (nSchedule == SCHED_SMALL_FLINCH)
+	{
+		m_flNextFlinchTime = gpGlobals->curtime + random->RandomFloat(1, 3);
+	}
 
-	return BaseClass::SelectSchedule();
+	return nSchedule;
+	//return BaseClass::SelectSchedule();
 }
 
 //=========================================================
@@ -827,10 +902,18 @@ void CNPC_Bullsquid::StartTask( const Task_t *pTask )
 
 				m_flLastAttackTime = gpGlobals->curtime;
 
+				//SetIdealActivity(ACT_MELEE_ATTACK2);
+
 				BaseClass::StartTask( pTask );
 			}
 			break;
 		}
+	//case TASK_MELEE_ATTACK1:
+	//{
+	//	SetIdealActivity(ACT_MELEE_ATTACK1);
+		
+	//	break;
+	//}
 	case TASK_SQUID_HOPTURN:
 		{
 			SetActivity( ACT_HOP );
@@ -881,6 +964,29 @@ void CNPC_Bullsquid::RunTask( const Task_t *pTask )
 			}
 			break;
 		}
+	case TASK_MELEE_ATTACK1:
+	{
+		if (GetEnemy() != NULL)
+		{
+			if (IsActivityFinished())
+			{
+				TaskComplete();
+			}
+		}
+		else
+		{
+			BaseClass::RunTask(pTask);
+		}
+		break;
+	}
+	case TASK_MELEE_ATTACK2:
+	{
+		if (IsActivityFinished())
+		{
+			TaskComplete();
+		}
+		break;
+	}
 	default:
 		{
 			BaseClass::RunTask( pTask );
@@ -1053,6 +1159,23 @@ AI_BEGIN_CUSTOM_NPC( monster_bullsquid, CNPC_Bullsquid )
 		"		TASK_WALK_PATH					0"
 		"		TASK_WAIT_FOR_MOVEMENT			0"
 		"		TASK_CLEAR_LASTPOSITION			0"
+		"	"
+		"	Interrupts"
+		"		COND_LIGHT_DAMAGE"
+		"		COND_HEAVY_DAMAGE"
+		"		COND_NEW_ENEMY"
+	)
+
+	// MELEE ATTACK 2 override
+	DEFINE_SCHEDULE
+	(
+		SCHED_SQUID_MELEE_ATTACK2,
+
+		"	Tasks"
+		"		TASK_STOP_MOVING		0"
+		"		TASK_FACE_ENEMY			0"
+		"		TASK_ANNOUNCE_ATTACK	2"	// 2 = secondary attack
+		"		TASK_MELEE_ATTACK2		0"
 		"	"
 		"	Interrupts"
 		"		COND_LIGHT_DAMAGE"

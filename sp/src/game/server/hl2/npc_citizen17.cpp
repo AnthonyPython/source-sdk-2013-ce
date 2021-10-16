@@ -352,6 +352,7 @@ BEGIN_DATADESC( CNPC_Citizen )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetAmmoResupplierOn",	InputSetAmmoResupplierOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetAmmoResupplierOff",	InputSetAmmoResupplierOff ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SpeakIdleResponse", InputSpeakIdleResponse ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,	"AddCapability", InputAddCapability),
 
 #if HL2_EPISODIC
 	DEFINE_INPUTFUNC( FIELD_VOID,   "ThrowHealthKit", InputForceHealthKitToss ),
@@ -477,9 +478,10 @@ void CNPC_Citizen::Spawn()
 		m_nSkin = 2;
 	
 	m_bRPGAvoidPlayer = false;
-
+	
 	m_bShouldPatrol = false;
 	m_iHealth = sk_citizen_health.GetFloat();
+	
 	
 	// Are we on a train? Used in trainstation to have NPCs on trains.
 	if ( GetMoveParent() && FClassnameIs( GetMoveParent(), "func_tracktrain" ) )
@@ -3833,6 +3835,13 @@ void CNPC_Citizen::InputSpeakIdleResponse( inputdata_t &inputdata )
 	SpeakIfAllowed( TLK_ANSWER, NULL, true );
 }
 
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void CNPC_Citizen::InputAddCapability(inputdata_t& inputdata)
+{
+	CapabilitiesAdd(inputdata.value.Int());
+}
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::DeathSound( const CTakeDamageInfo &info )

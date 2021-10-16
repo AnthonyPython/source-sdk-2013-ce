@@ -240,6 +240,7 @@ public:
 	void			InputSetAmmoResupplierOn( inputdata_t &inputdata );
 	void			InputSetAmmoResupplierOff( inputdata_t &inputdata );
 	void			InputSpeakIdleResponse( inputdata_t &inputdata );
+	void			InputAddCapability( inputdata_t &inputdata );
 
 	//---------------------------------
 	//	Sounds & speech

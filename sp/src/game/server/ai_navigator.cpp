@@ -1642,6 +1642,14 @@ void CAI_Navigator::MoveCalcBaseGoal( AILocalMoveGoal_t *pMoveGoal )
 		AI_Waypoint_t *pCurWaypoint = GetPath()->GetCurWaypoint();
 		if ( pCurWaypoint->GetNext() && pCurWaypoint->GetNext()->NavType() != pCurWaypoint->NavType() )
 			pMoveGoal->flags |= AILMG_TARGET_IS_TRANSITION;
+#ifdef SDK2013CE
+		// TODO: Better place for this code?
+		if (pMoveGoal->flags & AILMG_TARGET_IS_TRANSITION && pCurWaypoint->GetNext()->NavType() == NAV_CLIMB)
+		{
+			// NPCs need to holster their weapons before climbing.
+			GetOuter()->SetDesiredWeaponState(DESIREDWEAPONSTATE_HOLSTERED);
+		}
+#endif
 	}
 
 	const Task_t *pCurTask = GetOuter()->GetTask();
@@ -2591,8 +2599,12 @@ bool CAI_Navigator::Move( float flInterval )
 
 			if ( GetNavType() == NAV_CLIMB )
 			{
+#ifdef SDK2013CE
+				GetMotor()->MoveClimbPause();
+#else
 				GetMotor()->MoveClimbStop();
-				SetNavType( NAV_GROUND );
+				SetNavType(NAV_GROUND);
+#endif
 			}
 			GetMotor()->MoveStop();
 			AssertMsg( TaskIsRunning() || TaskIsComplete(), ("Schedule stalled!!\n") );
@@ -3880,7 +3892,12 @@ bool CAI_Navigator::GetStoppingPath( CAI_WaypointList *	pClippedWaypoints )
 	AI_Waypoint_t *pCurWaypoint = GetPath()->GetCurWaypoint();
 	if ( pCurWaypoint )
 	{
-		bool bMustCompleteCurrent = ( pCurWaypoint->NavType() == NAV_CLIMB || pCurWaypoint->NavType() == NAV_JUMP );
+#ifdef EXPANDED_NAVIGATION_ACTIVITIES
+		// Since regular climb nav can interrupt itself now, only do this when dismounting
+		bool bMustCompleteCurrent = ((pCurWaypoint->NavType() == NAV_CLIMB && (GetActivity() == ACT_CLIMB_DISMOUNT || GetActivity() == ACT_CLIMB_MOUNT_TOP)) || pCurWaypoint->NavType() == NAV_JUMP);
+#else
+		bool bMustCompleteCurrent = (pCurWaypoint->NavType() == NAV_CLIMB || pCurWaypoint->NavType() == NAV_JUMP);
+#endif
 		float distRemaining = GetMotor()->MinStoppingDist( 0 );
 
 		if ( bMustCompleteCurrent )

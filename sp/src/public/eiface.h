@@ -260,6 +260,9 @@ public:
 	// fill in the plane that leads out of this area (it points into whatever area it leads to).
 	virtual bool		GetAreaPortalPlane( Vector const &vViewOrigin, int portalKey, VPlane *pPlane ) = 0;
 
+	// Apply a modification to the terrain.
+	//virtual void		ApplyTerrainMod(TerrainModType type, CTerrainModParams const& params) = 0;
+
 	// Save/restore wrapper - FIXME:  At some point we should move this to it's own interface
 	virtual bool		LoadGameState( char const *pMapName, bool createPlayers ) = 0;
 	virtual void		LoadAdjacentEnts( const char *pOldLevel, const char *pLandmarkName ) = 0;

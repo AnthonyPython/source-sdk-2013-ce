@@ -5911,6 +5911,15 @@ CAI_BaseNPC *CAI_BaseNPC::CreateCustomTarget( const Vector &vecOrigin, float dur
 //-----------------------------------------------------------------------------
 Activity CAI_BaseNPC::NPC_TranslateActivity( Activity eNewActivity )
 {
+
+#ifdef EXPANDED_NAVIGATION_ACTIVITIES
+	if (GetNavType() == NAV_CLIMB && eNewActivity == ACT_IDLE)
+	{
+		// Schedules which break into idle activities should try to maintain the climbing animation.
+		return ACT_CLIMB_IDLE;
+	}
+#endif
+
 	Assert( eNewActivity != ACT_INVALID );
 
 	if (eNewActivity == ACT_RANGE_ATTACK1)

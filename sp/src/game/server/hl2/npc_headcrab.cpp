@@ -2117,7 +2117,7 @@ bool CBaseHeadcrab::HandleInteraction(int interactionType, void *data, CBaseComb
 		return true;
 	}
 	else if (	interactionType ==	g_interactionVortigauntKick
-				/* || (interactionType ==	g_interactionBullsquidThrow) */
+				 || (interactionType ==	g_interactionBullsquidThrow) 
 				)
 	{
 		SetIdealState( NPC_STATE_PRONE );

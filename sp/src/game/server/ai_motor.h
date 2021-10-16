@@ -63,6 +63,11 @@ public:
 	virtual AIMoveResult_t MoveClimbExecute( const Vector &climbDest, const Vector &climbDir, float climbDist, float yaw, int climbNodesLeft );
 	virtual void 		MoveClimbStop();
 
+#ifdef SDK2013CE
+	virtual void		MoveClimbPause();
+	virtual bool		MoveClimbShouldTeleportToSequenceEnd(Vector& teleportOrigin);
+#endif
+
 	//---------------------------------
 
 

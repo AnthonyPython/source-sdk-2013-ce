@@ -672,7 +672,10 @@ int CNPCSimpleTalker::FIdleSpeak( void )
 			{
 				SetSpeechTarget( pFriend );
 				// play response
-				SpeakAnswerFriend(GetSpeechTarget());
+
+				//SpeakAnswerFriend(GetSpeechTarget());
+				CNPCSimpleTalker* pTalkSimpleNPC = (CNPCSimpleTalker*)pTalkNPC;
+				pTalkSimpleNPC->SetAnswerQuestion(this);
 				//pTalkNPC->SetAnswerQuestion( this );
 				
 				//pTalkNPC->GetExpresser()->SpeakRawSentence("SC_ANSWER", GetExpresser()->GetTimeSpeechComplete() +2, 1.0, SNDLVL_TALKING, this);
@@ -887,8 +890,10 @@ bool CNPCSimpleTalker::CanSayHello( void )
 void CNPCSimpleTalker::OnStartingFollow( CBaseEntity *pTarget )
 {
 	GetExpresser()->SetSpokeConcept( TLK_HELLO, NULL );	// Don't say hi after you've started following
-	if ( IsOkToSpeak() ) // don't speak if idle talk is blocked. player commanded/use follow will always speak
+
+	//if ( IsOkToSpeak() ) // don't speak if idle talk is blocked. player commanded/use follow will always speak
 		Speak( TLK_STARTFOLLOW );
+	//PlaySentence("SC_OK", 0.0);
 	SetSpeechTarget( GetTarget() );
 	ClearCondition( COND_PLAYER_PUSHING );
 }

@@ -15,13 +15,14 @@ public:
 	virtual void Precache(void);
 	Class_T	Classify(void);
 
+	//virtual void FollowerUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
 	//void IdleSound(void);
 	void PainSound(const CTakeDamageInfo& info);
 	//void AlertSound(void);
 	void DeathSound(const CTakeDamageInfo& info);
 
 
-	float MaxYawSpeed(void);
+	virtual float MaxYawSpeed(void);
 
 	void HandleAnimEvent(animevent_t* pEvent);
 
@@ -35,7 +36,7 @@ public:
 	virtual int SelectSchedule(void);
 
 
-
+	bool HandleInteraction(int interactionType, void* data, CBaseCombatCharacter* pSourceEnt);
 	virtual void DeclineFollowing(void);
 
 	virtual Activity GetStoppedActivity(void);
@@ -125,7 +126,9 @@ public:
 		SCHED_SCIENTIST_STAHPFOLLOWINGTHETARGET,
 		SCHED_SCIENTIST_FACETHETARGET,
 		SCHED_SCIENTIST_IDLE_STAND,
-		SCHED_SCIENTIST_FOLLOWSCARED
+		SCHED_SCIENTIST_FOLLOWSCARED,
+
+		NEXTSCHEDULE
 
 	};
 
@@ -140,6 +143,8 @@ public:
 		TASK_MOVE_TO_TARGET_RANGE_SCARED,
 		TASK_CANT_FOLLOW,
 		TASK_TLK_HEADRESET,
+
+		NEXT_TASK
 	};
 
 

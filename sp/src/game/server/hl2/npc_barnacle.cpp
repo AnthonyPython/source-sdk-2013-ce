@@ -664,6 +664,12 @@ bool CNPC_Barnacle::CanPickup( CBaseCombatCharacter *pBCC )
 	if( FClassnameIs( pBCC, "npc_turret_floor" ) )
 		return false;
 
+#ifdef SDK2013CE
+	// Don't pickup rollermines
+	if( FClassnameIs( pBCC, "npc_rollermine" ) )
+		return false;
+#endif
+
 	// Don't pick up a dead player or NPC
 	if( !pBCC->IsAlive() )
 		return false;
@@ -2213,6 +2219,11 @@ bool CNPC_Barnacle::IsPoisonous( CBaseEntity *pVictim )
 	if ( FClassnameIs(pVictim,"npc_headcrab_black") )
 		return true;
 
+#ifdef SDK2013CE
+	if (FClassnameIs( pVictim, "npc_poisonzombie" ))
+		return true;
+#endif
+
 	if ( FClassnameIs(pVictim,"npc_antlion") &&
 		 static_cast<CNPC_Antlion *>(pVictim)->IsWorker()
 		)
@@ -2220,6 +2231,7 @@ bool CNPC_Barnacle::IsPoisonous( CBaseEntity *pVictim )
 	
 	return false;
 }
+#endif
 
 
 
@@ -2241,7 +2253,7 @@ void CNPC_Barnacle::InputLetGo( inputdata_t &inputdata )
 	}
 }
 
-
+#if HL2_EPISODIC
 // Barnacle has custom impact damage tables, so it can take grave damage from sawblades.
 static impactentry_t barnacleLinearTable[] =
 {

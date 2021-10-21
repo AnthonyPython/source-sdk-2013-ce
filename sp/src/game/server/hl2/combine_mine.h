@@ -65,6 +65,11 @@ public:
 
 	bool IsPlayerPlaced() { return m_bPlacedByPlayer; }
 
+	// Determines whether companions should treat the mine as a navigation obstacle and avoid it
+	bool ShouldBeAvoidedByCompanions();
+
+	bool	m_bUnavoidable;
+
 	bool CreateVPhysics()
 	{
 		VPhysicsInitNormal( SOLID_VPHYSICS, 0, false );

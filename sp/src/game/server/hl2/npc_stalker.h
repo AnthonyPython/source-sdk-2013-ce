@@ -49,6 +49,10 @@ public:
 	int					m_iPlayerAggression;
 	float				m_flNextScreamTime;
 
+#ifdef SDK2013CE
+	void				UpdateOnRemove( void );
+#endif
+
 	void				KillAttackBeam(void);
 	void				DrawAttackBeam(void);
 	void				CalcBeamPosition(void);

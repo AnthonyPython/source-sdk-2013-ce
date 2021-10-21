@@ -226,7 +226,14 @@ public:
 	virtual void		Weapon_HandleAnimEvent( animevent_t *pEvent );
 	CBaseCombatWeapon*	Weapon_OwnsThisType( const char *pszWeapon, int iSubType = 0 ) const;  // True if already owns a weapon of this class
 	virtual bool		Weapon_CanUse( CBaseCombatWeapon *pWeapon );		// True is allowed to use this class of weapon
+#ifdef SDK2013CE
+	virtual Activity	Weapon_BackupActivity( Activity activity, bool weaponTranslationWasRequired = false, CBaseCombatWeapon *pSpecificWeapon = NULL );
 	virtual void		Weapon_Equip( CBaseCombatWeapon *pWeapon );			// Adds weapon to player
+	virtual void		Weapon_EquipHolstered( CBaseCombatWeapon *pWeapon );	// Pretty much only useful for NPCs
+	virtual void		Weapon_HandleEquip( CBaseCombatWeapon *pWeapon );
+#else
+	virtual void		Weapon_Equip( CBaseCombatWeapon *pWeapon );			// Adds weapon to player
+#endif
 	virtual bool		Weapon_EquipAmmoOnly( CBaseCombatWeapon *pWeapon );	// Adds weapon ammo to player, leaves weapon
 	bool				Weapon_Detach( CBaseCombatWeapon *pWeapon );		// Clear any pointers to the weapon.
 	virtual void		Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget = NULL, const Vector *pVelocity = NULL );
@@ -289,7 +296,30 @@ public:
 
 	// Killed a character
 	void InputKilledNPC( inputdata_t &inputdata );
-	virtual void OnKilledNPC( CBaseCombatCharacter *pKilled ) {}; 
+#ifdef SDK2013CE
+
+	void InputGiveWeapon(inputdata_t& inputdata);
+	void InputDropWeapon(inputdata_t& inputdata);
+	void InputPickupWeaponInstant(inputdata_t& inputdata);
+	COutputEvent	m_OnWeaponEquip;
+	COutputEvent	m_OnWeaponDrop;
+
+	virtual void	InputHolsterWeapon(inputdata_t& inputdata);
+	virtual void	InputHolsterAndDestroyWeapon(inputdata_t& inputdata);
+	virtual void	InputUnholsterWeapon(inputdata_t& inputdata);
+	void			InputSwitchToWeapon(inputdata_t& inputdata);
+
+	COutputEHANDLE	m_OnKilledEnemy;
+	COutputEHANDLE	m_OnKilledPlayer;
+	virtual void OnKilledNPC(CBaseCombatCharacter* pKilled);
+
+#if 0
+	virtual	CBaseEntity* FindNamedEntity(const char* pszName, IEntityFindFilter* pFilter = NULL);
+#endif
+	COutputFloat	m_OnHealthChanged;
+#else
+	virtual void OnKilledNPC(CBaseCombatCharacter* pKilled) {};
+#endif
 
 	// Exactly one of these happens immediately after killed (gibbed may happen later when the corpse gibs)
 	// Character gibbed or faded out (violence controls) (only fired once)

@@ -37,6 +37,8 @@
 
 #define SF_ITEM_START_CONSTRAINED	0x00000001
 
+#define SF_ITEM_NO_NPC_PICKUP	(1<<3)
+
 
 class CItem : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
 {
@@ -77,6 +79,21 @@ public:
 #if defined( HL2MP ) || defined( TF_DLL )
 	void	FallThink( void );
 	float  m_flNextResetCheckTime;
+#endif
+
+#ifdef SDK2013CE
+	// This appeared to have no prior use in Source SDK 2013.
+	// It may have been originally intended for TF2 or some other game-specific item class.
+	virtual bool IsCombatItem() const { return true; }
+
+	// Used to access item_healthkit values, etc. from outside of the class
+	virtual float GetItemAmount() { return 1.0f; }
+
+	void	InputEnablePlayerPickup(inputdata_t& inputdata);
+	void	InputDisablePlayerPickup(inputdata_t& inputdata);
+	void	InputEnableNPCPickup(inputdata_t& inputdata);
+	void	InputDisableNPCPickup(inputdata_t& inputdata);
+	void	InputBreakConstraint(inputdata_t& inputdata);
 #endif
 
 	DECLARE_DATADESC();

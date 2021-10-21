@@ -40,6 +40,9 @@
 #include "ai_interactions.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
+#ifdef SDK2013CE
+#include "mapbase/GlobalStrings.h"
+#endif
 // NVNT haptic utils
 #include "haptics/haptic_utils.h"
 
@@ -438,10 +441,12 @@ static void ComputePlayerMatrix( CBasePlayer *pPlayer, matrix3x4_t &out )
 // Purpose: 
 //-----------------------------------------------------------------------------
 // derive from this so we can add save/load data to it
+#ifndef SDK2013CE // Moved to weapon_physcannon.h for point_physics_control
 struct game_shadowcontrol_params_t : public hlshadowcontrol_params_t
 {
 	DECLARE_SIMPLE_DATADESC();
 };
+#endif
 
 BEGIN_SIMPLE_DATADESC( game_shadowcontrol_params_t )
 	
@@ -1146,7 +1151,11 @@ void CPlayerPickupController::Use( CBaseEntity *pActivator, CBaseEntity *pCaller
 			Vector vecLaunch;
 			m_pPlayer->EyeVectors( &vecLaunch );
 			// JAY: Scale this with mass because some small objects really go flying
+#ifdef SDK2013CE
+			float massFactor = pPhys ? clamp( pPhys->GetMass(), 0.5, 15 ) : 7.5;
+#else
 			float massFactor = clamp( pPhys->GetMass(), 0.5, 15 );
+#endif
 			massFactor = RemapVal( massFactor, 0.5, 15, 0.5, 4 );
 			vecLaunch *= player_throwforce.GetFloat() * massFactor;
 
@@ -2084,6 +2093,10 @@ bool CWeaponPhysCannon::EntityAllowsPunts( CBaseEntity *pEntity )
 
 	if ( pEntity->HasSpawnFlags( SF_WEAPON_NO_PHYSCANNON_PUNT ) )
 	{
+#ifdef SDK2013CE
+		if (pEntity->IsBaseCombatWeapon() || pEntity->IsCombatItem())
+			return false;
+#else
 		CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>(pEntity);
 
 		if ( pWeapon != NULL )
@@ -2093,6 +2106,7 @@ bool CWeaponPhysCannon::EntityAllowsPunts( CBaseEntity *pEntity )
 				return false;
 			}
 		}
+#endif
 	}
 
 	return true;
@@ -2448,7 +2462,11 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 	}
 
 #if defined(HL2_DLL)
+#ifdef SDK2013CE
+	if( physcannon_right_turrets.GetBool() && EntIsClass(pObject, gm_isz_class_FloorTurret) )
+#else
 	if( physcannon_right_turrets.GetBool() && pObject->ClassMatches("npc_turret_floor") )
+#endif
 	{
 		// We just picked up a turret. Is it already upright?
 		Vector vecUp;
@@ -3287,6 +3305,15 @@ void CWeaponPhysCannon::ItemPostFrame()
 		return;
 	}
 
+#ifdef SDK2013CE
+	if (pOwner->HasSpawnFlags( SF_PLAYER_SUPPRESS_FIRING ))
+	{
+		m_nAttack2Debounce = 0;
+		WeaponIdle();
+		return;
+	}
+#endif
+
 	//Check for object in pickup range
 	if ( m_bActive == false )
 	{
@@ -3458,6 +3485,12 @@ bool CWeaponPhysCannon::CanPickupObject( CBaseEntity *pTarget )
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	if ( pOwner && pOwner->GetGroundEntity() == pTarget )
 		return false;
+
+#ifdef SDK2013CE
+	// The gravity gun can't pick up vehicles.
+	if ( pTarget->GetServerVehicle() )
+		return false;
+#endif
 
 	if ( !IsMegaPhysCannon() )
 	{

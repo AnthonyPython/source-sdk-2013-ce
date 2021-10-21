@@ -1106,6 +1106,30 @@ void CNPC_Stalker::DrawAttackBeam(void)
 	*/
 }
 
+#ifdef SDK2013CE
+//------------------------------------------------------------------------------
+// Purpose: Fixes stalker beam cleanup not working correctly
+//------------------------------------------------------------------------------
+void CNPC_Stalker::UpdateOnRemove( void )
+{
+	if (m_pBeam)
+	{
+		StopSound(m_pBeam->entindex(), "NPC_Stalker.BurnWall" );
+		StopSound(m_pBeam->entindex(), "NPC_Stalker.BurnFlesh" );
+
+		UTIL_Remove( m_pLightGlow );
+		UTIL_Remove( m_pBeam);
+		m_pBeam = NULL;
+		m_bPlayingHitWall = false;
+		m_bPlayingHitFlesh = false;
+
+		SetThink(NULL);
+	}
+
+	BaseClass::UpdateOnRemove();
+}
+#endif
+
 //------------------------------------------------------------------------------
 // Purpose : Draw attack beam and do damage / decals
 // Input   :
@@ -1168,7 +1192,11 @@ bool CNPC_Stalker::InnateWeaponLOSCondition( const Vector &ownerPos, const Vecto
 	}
 	else if (pBCC) 
 	{
+#ifdef SDK2013CE
+		if (IRelationType( pBCC ) <= D_FR)
+#else
 		if (IRelationType( pBCC ) == D_HT)
+#endif
 		{
 			return true;
 		}

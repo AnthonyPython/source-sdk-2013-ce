@@ -30,10 +30,28 @@ public:
 	void Spawn( void );
 	void Precache( void );
 	bool MyTouch( CBasePlayer *pPlayer );
+
+#ifdef SDK2013CE
+	float GetItemAmount() { return sk_healthkit.GetFloat() * m_flHealthMultiplier; }
+
+	void	InputSetHealthMultiplier(inputdata_t& inputdata) { m_flHealthMultiplier = inputdata.value.Float(); }
+	float	m_flHealthMultiplier = 1.0f;
+
+	DECLARE_DATADESC();
+#endif
 };
 
 LINK_ENTITY_TO_CLASS( item_healthkit, CHealthKit );
 PRECACHE_REGISTER(item_healthkit);
+
+#ifdef SDK2013CE
+BEGIN_DATADESC(CHealthKit)
+
+DEFINE_KEYFIELD(m_flHealthMultiplier, FIELD_FLOAT, "HealthMultiplier"),
+DEFINE_INPUTFUNC(FIELD_FLOAT, "SetHealthMultiplier", InputSetHealthMultiplier),
+
+END_DATADESC()
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -119,7 +137,11 @@ public:
 
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
-		if ( pPlayer->TakeHealth( sk_healthvial.GetFloat(), DMG_GENERIC ) )
+#ifdef SDK2013CE
+		if (pPlayer->TakeHealth(GetItemAmount(), DMG_GENERIC))
+#else
+		if (pPlayer->TakeHealth(sk_healthvial.GetFloat(), DMG_GENERIC))
+#endif
 		{
 			CSingleUserRecipientFilter user( pPlayer );
 			user.MakeReliable();
@@ -145,10 +167,28 @@ public:
 
 		return false;
 	}
+
+#ifdef SDK2013CE
+	float GetItemAmount() { return sk_healthvial.GetFloat() * m_flHealthMultiplier; }
+
+	void	InputSetHealthMultiplier(inputdata_t& inputdata) { m_flHealthMultiplier = inputdata.value.Float(); }
+	float	m_flHealthMultiplier = 1.0f;
+
+	DECLARE_DATADESC();
+#endif
 };
 
 LINK_ENTITY_TO_CLASS( item_healthvial, CHealthVial );
 PRECACHE_REGISTER( item_healthvial );
+
+#ifdef SDK2013CE
+BEGIN_DATADESC(CHealthVial)
+
+DEFINE_KEYFIELD(m_flHealthMultiplier, FIELD_FLOAT, "HealthMultiplier"),
+DEFINE_INPUTFUNC(FIELD_FLOAT, "SetHealthMultiplier", InputSetHealthMultiplier),
+
+END_DATADESC()
+#endif
 
 //-----------------------------------------------------------------------------
 // Wall mounted health kit. Heals the player when used.

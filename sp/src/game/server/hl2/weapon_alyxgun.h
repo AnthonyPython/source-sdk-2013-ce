@@ -13,6 +13,11 @@
 #pragma once
 #endif
 
+#ifdef SDK2013CE
+extern acttable_t *GetPistolActtable();
+extern int GetPistolActtableCount();
+#endif
+
 class CWeaponAlyxGun : public CHLSelectFireMachineGun
 {
 	DECLARE_DATADESC();
@@ -50,6 +55,11 @@ public:
 		// Alyx gun cannot be picked up
 		SetTouch(NULL);
 	}
+
+#ifdef SDK2013CE
+	virtual acttable_t		*GetBackupActivityList() { return GetPistolActtable(); }
+	virtual int				GetBackupActivityListCount() { return GetPistolActtableCount(); }
+#endif
 
 	float m_flTooCloseTimer;
 

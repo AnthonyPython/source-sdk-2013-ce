@@ -2887,7 +2887,11 @@ int CNPC_Antlion::MeleeAttack1Conditions( float flDot, float flDist )
 	AI_TraceHull( WorldSpaceCenter(), GetEnemy()->WorldSpaceCenter(), -Vector(8,8,8), Vector(8,8,8), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
 
 	// If the hit entity isn't our target and we don't hate it, don't hit it
+#ifdef SDK2013CE
+	if ( tr.m_pEnt != GetEnemy() && tr.fraction < 1.0f && IRelationType( tr.m_pEnt ) > D_FR )
+#else
 	if ( tr.m_pEnt != GetEnemy() && tr.fraction < 1.0f && IRelationType( tr.m_pEnt ) != D_HT )
+#endif
 		return 0;
 
 #else

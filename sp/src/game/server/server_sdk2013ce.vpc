@@ -80,6 +80,13 @@ $Project "Server"
 			
 			
 		}
+		$Folder	"MAPBASE DLL"
+		{
+			$File	"mapbase\ai_grenade.cpp"
+			$File	"mapbase\ai_grenade.h"
+			$File	"mapbase\GlobalStrings.cpp"
+			$File	"mapbase\GlobalStrings.h"
+		}
 
 		$Folder	"HLSS DLL"
 		{

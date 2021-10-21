@@ -29,6 +29,8 @@ $Project "Client"
 
 		$Folder	"SDK2013CE DLL"
 		{
+			//$File	"$SRCDIR\game\shared\hl2\weapon_stunstick.cpp"
+			//$File	"$SRCDIR\game\shared\hl2\weapon_stunstick.h"
 		}
 
 		$Folder	"HLSS DLL"

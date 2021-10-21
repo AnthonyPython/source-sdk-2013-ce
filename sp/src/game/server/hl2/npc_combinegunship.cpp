@@ -51,6 +51,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#ifdef SDK2013CE
+#define BELLYBLAST
+#endif
+
 #define GUNSHIP_MSG_BIG_SHOT			1
 #define GUNSHIP_MSG_STREAKS				2
 
@@ -420,7 +424,11 @@ BEGIN_DATADESC( CNPC_CombineGunship )
 
 	DEFINE_FIELD( m_flNextGroundAttack,FIELD_TIME ),
 	DEFINE_FIELD( m_bIsGroundAttacking,FIELD_BOOLEAN ),
+#ifdef SDK2013CE
+	DEFINE_KEYFIELD( m_bCanGroundAttack, FIELD_BOOLEAN, "CanGroundAttack" ),
+#else
 	DEFINE_FIELD( m_bCanGroundAttack,	FIELD_BOOLEAN ),
+#endif
 	DEFINE_FIELD( m_flGroundAttackTime,FIELD_TIME ),
 	DEFINE_FIELD( m_pRotorWashModel,	FIELD_CLASSPTR ),
 	DEFINE_FIELD( m_pSmokeTrail,		FIELD_EHANDLE ),
@@ -601,8 +609,10 @@ void CNPC_CombineGunship::Spawn( void )
 	m_bPreFire			= false;
 	m_bInvulnerable		= false;
 	
+#ifndef SDK2013CE // Spawnflag has been replaced with KV
 	// See if we should start being able to attack
 	m_bCanGroundAttack	= ( m_spawnflags & SF_GUNSHIP_NO_GROUND_ATTACK ) ? false : true;
+#endif
 
 	m_flEndDestructTime = 0;
 

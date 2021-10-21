@@ -5611,6 +5611,40 @@ int CNPC_Hunter::OnTakeDamage( const CTakeDamageInfo &info )
 			}
 		}
 	}
+#ifdef SDK2013CE
+	else if (info.GetDamageType() == DMG_CLUB &&
+		info.GetInflictor() && info.GetInflictor()->IsNPC())
+	{
+		// If the *inflictor* is a NPC doing club damage, it's most likely an antlion guard or even another hunter charging us.
+		// Add DMG_CRUSH so we ragdoll immediately if we die.
+		myInfo.AddDamageType( DMG_CRUSH );
+	}
+
+
+	// "So, do you know what the alternative fire method does on the AR2? It kills hunters. How did--"
+	// "No, only Freeman's does it!"
+	// "What do you mean 'Only Freeman's does it'?"
+	// "Only energy balls fired by the player can dissolve hunters. Energy balls fired by NPCs only do a metered amount of damage."
+	// "...Huh. Well, in that case, we'll just use rocket launchers."
+	// 
+	// That instructor was straight-up lying to those rebels, but now he's telling the truth.
+	// Hunters die to NPC balls instantly and act like it was a player ball.
+	// Implementation is sketchy, but it was the best I could do.
+	if (myInfo.GetDamageType() & DMG_DISSOLVE &&
+		info.GetAttacker() && info.GetAttacker()->IsNPC() &&
+		info.GetInflictor() && info.GetInflictor()->ClassMatches("prop_combine_ball"))
+	{
+		// We divide by the ally damage scale to counter its usage in OnTakeDamage_Alive.
+		myInfo.SetDamage( (float)GetMaxHealth() / sk_hunter_citizen_damage_scale.GetFloat() );
+
+		myInfo.AddDamageType( DMG_CRUSH );
+		//myInfo.SetDamagePosition( info.GetInflictor()->GetAbsOrigin() );
+		//myInfo.SetDamageForce( info.GetInflictor()->GetAbsVelocity() );
+
+		// Make the NPC's ball explode
+		info.GetInflictor()->AcceptInput( "Explode", this, this, variant_t(), 0 );
+	}
+#endif
 	
 	return BaseClass::OnTakeDamage( myInfo );
 }

@@ -69,6 +69,9 @@ CON_COMMAND( ai_debug_node_connect, "Debug the attempted connection between two 
 // line to properly override the node graph building.
 
 ConVar g_ai_norebuildgraph( "ai_norebuildgraph", "0" );
+#ifdef SDK2013CE
+ConVar g_ai_norebuildgraphmessage( "ai_norebuildgraphmessage", "0", FCVAR_ARCHIVE, "Stops the \"Node graph out of date\" message from appearing when rebuilding node graph" );
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -1110,9 +1113,18 @@ void CAI_NetworkManager::DelayedInit( void )
 #endif
 
 			DevMsg( "Node Graph out of Date. Rebuilding... (%d, %d, %d)\n", (int)m_bDontSaveGraph, (int)!CAI_NetworkManager::NetworksLoaded(), (int) engine->IsInEditMode() );
+#ifdef SDK2013CE
+			if (!g_ai_norebuildgraphmessage.GetBool())
+				UTIL_CenterPrintAll( "Node Graph out of Date. Rebuilding...\n" );
+
+			// Do it much sooner after map load
+			g_pAINetworkManager->SetNextThink( gpGlobals->curtime + 0.5 );
+			m_bNeedGraphRebuild = true;
+#else
 			UTIL_CenterPrintAll( "Node Graph out of Date. Rebuilding...\n" );
 			m_bNeedGraphRebuild = true;
 			g_pAINetworkManager->SetNextThink( gpGlobals->curtime + 1 );
+#endif
 			return;
 		}	
 
@@ -3040,6 +3052,16 @@ int CAI_NetworkBuilder::ComputeConnection( CAI_Node *pSrcNode, CAI_Node *pDestNo
 		}
 		else
 		{
+#ifdef SDK2013CE
+			// This is kind of a hack since target node IDs are designed to be used *after* the nodegraph is generated.
+			// However, for the purposes of forcing a climb connection outside of regular lineup bounds, it seems to be a reasonable solution.
+			if (pSrcNode->GetHint() && pDestNode->GetHint() &&
+				(pSrcNode->GetHint()->GetTargetWCNodeID() == pDestNode->GetHint()->GetWCId() || pDestNode->GetHint()->GetTargetWCNodeID() == pSrcNode->GetHint()->GetWCId()))
+			{
+				DebugConnectMsg( srcId, destId, "      Ignoring climbing lineup due to manual target ID linkage\n" );
+			}
+			else
+#endif
 			if ( !IsInLineForClimb(srcPos, UTIL_YawToVector( pSrcNode->m_flYaw ), destPos, UTIL_YawToVector( pDestNode->m_flYaw ) ) )
 			{
 				Assert( !IsInLineForClimb(destPos, UTIL_YawToVector( pDestNode->m_flYaw ), srcPos, UTIL_YawToVector( pSrcNode->m_flYaw ) ) );

@@ -50,6 +50,12 @@ bool CAI_FuncTankBehavior::CanSelectSchedule()
 	if ( !m_hFuncTank )
 		return false;
 
+#if 0
+	// We're glued to our func_tank, don't get off of it
+	if ( m_hFuncTank->m_bControllerGlued )
+		return true;
+#endif
+
 	// Are you alive, in a script?
 	if ( !GetOuter()->IsInterruptable() )
 		return false;

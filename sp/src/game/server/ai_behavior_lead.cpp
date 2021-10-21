@@ -543,8 +543,12 @@ int CAI_LeadBehavior::SelectSchedule()
 				if ( !m_flWeaponSafetyTimeOut || (m_flWeaponSafetyTimeOut > gpGlobals->curtime) )
 					return SCHED_LEAD_PLAYERNEEDSWEAPON;
 
+#ifdef SDK2013CE
+				pFollower->GiveNamedItem( STRING(m_weaponname) );
+#else
 				string_t iszItem = AllocPooledString( "weapon_bugbait" );
 				pFollower->GiveNamedItem( STRING(iszItem) );
+#endif
 			}
 		}
 
@@ -1649,6 +1653,9 @@ public:
 
 private:
 	string_t	m_iszWeaponName;
+#ifdef SDK2013CE
+	float		m_flTimeoutTime = 60;
+#endif
 	string_t	m_iszMissingWeaponConceptModifier;
 
 	DECLARE_DATADESC();
@@ -1688,6 +1695,10 @@ void CAI_LeadGoal_Weapon::InputActivate( inputdata_t &inputdata )
 	CAI_LeadBehavior *pBehavior = GetLeadBehavior();
 	if ( pBehavior )
 	{
+#ifdef SDK2013CE
+		pBehavior->SetWaitForWeapon( m_iszWeaponName, m_flTimeoutTime );
+#else
 		pBehavior->SetWaitForWeapon( m_iszWeaponName );
+#endif
 	}
 }

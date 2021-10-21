@@ -44,6 +44,15 @@ ConVar hlss_carry_turrets("hlss_carry_turrets", "1");
 
 extern ConVar physcannon_tracelength;
 
+#if defined(SDK2013CE) && defined(HL2_EPISODIC)
+extern ConVar npc_alyx_interact_turrets;
+#endif
+
+#ifdef SDK2013CE
+// m_iKeySkin has been replaced with the original m_nSkin so we can make it show up in Hammer, etc.
+#define m_iKeySkin m_nSkin
+#endif
+
 // Interactions
 int	g_interactionTurretStillStanding	= 0;
 
@@ -146,6 +155,7 @@ BEGIN_DATADESC( CNPC_FloorTurret )
 	DEFINE_OUTPUT( m_OnTipped, "OnTipped" ),
 	DEFINE_OUTPUT( m_OnPhysGunPickup, "OnPhysGunPickup" ),
 	DEFINE_OUTPUT( m_OnPhysGunDrop, "OnPhysGunDrop" ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Hack", InputDoInteraction),
 
 	DEFINE_BASENPCINTERACTABLE_DATADESC(),
 
@@ -311,10 +321,12 @@ void CNPC_FloorTurret::Spawn( void )
 			// add one mod 4
 			nextSkin = (nextSkin + 1) & 0x03;
 		}
+#ifndef SDK2013CE
 		else
 		{	// at least make sure that it's in the right range
 			m_nSkin = clamp(m_iKeySkin,1,4);
 		}
+#endif
 	}
 
 	BaseClass::Spawn();
@@ -2173,6 +2185,20 @@ int CNPC_FloorTurret::DrawDebugTextOverlays( void )
 
 	return text_offset;
 }
+
+#ifdef SDK2013CE
+//-----------------------------------------------------------------------------
+// Purpose: Option to restore Alyx's interactions with non-rollermines
+//-----------------------------------------------------------------------------
+bool CNPC_FloorTurret::CanInteractWith( CAI_BaseNPC *pUser )
+{
+#ifdef HL2_EPISODIC
+	return npc_alyx_interact_turrets.GetBool();
+#else
+	return false;
+#endif
+}
+#endif
 
 void CNPC_FloorTurret::UpdateMuzzleMatrix()
 {

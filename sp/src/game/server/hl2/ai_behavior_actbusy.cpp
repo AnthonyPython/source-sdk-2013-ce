@@ -354,6 +354,16 @@ void CAI_ActBusyBehavior::ForceActBusy( CAI_ActBusyGoal *pGoal, CAI_Hint *pHintN
 {
 	Assert( !m_bLeaving );
 
+#ifdef SDK2013CE
+	if ( m_bNeedsToPlayExitAnim && !bTeleportToBusy )
+	{
+		if ( HasAnimForActBusy( m_iCurrentBusyAnim, BA_EXIT ) )
+		{
+			m_hNextActBusyGoal = pGoal;
+			//m_bNextActBusyVisOnly = bVisibleOnly;
+		}
+	}
+#else
 	if ( m_bNeedsToPlayExitAnim )
 	{
 		// If we hit this, the mapmaker's told this NPC to actbusy somewhere while it's still in an actbusy.
@@ -364,6 +374,7 @@ void CAI_ActBusyBehavior::ForceActBusy( CAI_ActBusyGoal *pGoal, CAI_Hint *pHintN
 			return;
 		}
 	}
+#endif
 
 	if ( ai_debug_actbusy.GetInt() == 4 )
 	{
@@ -379,7 +390,18 @@ void CAI_ActBusyBehavior::ForceActBusy( CAI_ActBusyGoal *pGoal, CAI_Hint *pHintN
 		Msg("\n");
 	}
 
+#ifdef SDK2013CE
+	if (!m_hNextActBusyGoal)
+	{
+		Enable( pGoal, m_flBusySearchRange, bVisibleOnly );
+	}
+	else
+	{
+		Enable( NULL, m_flBusySearchRange, bVisibleOnly );
+	}
+#else
 	Enable( pGoal, m_flBusySearchRange, bVisibleOnly );
+#endif
 	m_bForceActBusy = true;
 	m_flForcedMaxTime = flMaxTime;
 	m_bTeleportToBusy = bTeleportToBusy;

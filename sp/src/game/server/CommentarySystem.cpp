@@ -663,6 +663,10 @@ public:
 			Msg( "Commentary: Could not find commentary data file '%s'. \n", szFullName );
 		}
 
+#ifdef SDK2013CE// VDC Memory Leak Fixes
+		pkvFile->deleteThis();
+#endif
+
 		engine->LockNetworkStringTables( oldLock );
 	}
 

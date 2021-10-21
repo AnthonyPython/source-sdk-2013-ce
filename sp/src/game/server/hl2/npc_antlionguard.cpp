@@ -1573,7 +1573,11 @@ public:
 			if ( pVictimBCC )
 			{
 				// Can only damage other NPCs that we hate
+#ifdef SDK2013CE
+				if ( m_pAttacker->IRelationType( pEntity ) <= D_FR )
+#else
 				if ( m_pAttacker->IRelationType( pEntity ) == D_HT )
+#endif
 				{
 					pEntity->TakeDamage( info );
 					return true;
@@ -2612,8 +2616,15 @@ public:
 			if ( !pEntity->IsNPC() && pEntity->GetMoveType() == MOVETYPE_VPHYSICS )
 			{
 				IPhysicsObject *pPhysics = pEntity->VPhysicsGetObject();
+#ifdef SDK2013CE
+				// A MOVETYPE_VPHYSICS object without a VPhysics object is an odd edge case, but it's evidently possible
+				// since my game crashed after an antlion guard tried to see me through an EP2 jalopy.
+				// Perhaps that's a sign of an underlying issue?
+				if ( pPhysics && pPhysics->IsMoveable() && pPhysics->GetMass() < m_minMass )
+#else
 				Assert(pPhysics);
 				if ( pPhysics->IsMoveable() && pPhysics->GetMass() < m_minMass )
+#endif
 					return false;
 			}
 
@@ -2729,7 +2740,11 @@ bool CNPC_AntlionGuard::HandleChargeImpact( Vector vecImpact, CBaseEntity *pEnti
 	}
 
 	// Hit anything we don't like
+#ifdef SDK2013CE
+	if ( IRelationType( pEntity ) <= D_FR && ( GetNextAttack() < gpGlobals->curtime ) )
+#else
 	if ( IRelationType( pEntity ) == D_HT && ( GetNextAttack() < gpGlobals->curtime ) )
+#endif
 	{
 		EmitSound( "NPC_AntlionGuard.Shove" );
 

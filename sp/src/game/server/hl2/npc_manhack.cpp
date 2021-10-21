@@ -78,6 +78,10 @@
 
 #define	MANHACK_CHARGE_MIN_DIST	200
 
+#if defined(SDK2013CE) && defined(HL2_EPISODIC)
+extern ConVar npc_alyx_interact_manhacks;
+#endif
+
 ConVar	sk_manhack_health( "sk_manhack_health","0");
 ConVar	sk_manhack_melee_dmg( "sk_manhack_melee_dmg","0");
 ConVar	sk_manhack_v2( "sk_manhack_v2","1");
@@ -149,7 +153,11 @@ BEGIN_DATADESC( CNPC_Manhack )
 	DEFINE_FIELD( m_bGib,					FIELD_BOOLEAN),
 	DEFINE_FIELD( m_bHeld,					FIELD_BOOLEAN),
 	
+#ifdef SDK2013CE
+	DEFINE_KEYFIELD( m_bHackedByAlyx, FIELD_BOOLEAN, "Hacked" ),
+#else
 	DEFINE_FIELD( m_bHackedByAlyx,			FIELD_BOOLEAN),
+#endif
 	DEFINE_FIELD( m_vecLoiterPosition,		FIELD_POSITION_VECTOR),
 	DEFINE_FIELD( m_fTimeNextLoiterPulse,	FIELD_TIME),
 
@@ -189,6 +197,7 @@ BEGIN_DATADESC( CNPC_Manhack )
 	DEFINE_INPUTFUNC( FIELD_VOID,   "Unpack",		InputUnpack ),
 
 	DEFINE_ENTITYFUNC( CrashTouch ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Hack", InputDoInteraction),
 
 	DEFINE_BASENPCINTERACTABLE_DATADESC(),
 
@@ -2453,7 +2462,9 @@ void CNPC_Manhack::Spawn(void)
 	SetCollisionGroup( COLLISION_GROUP_NONE );
 
 	m_bHeld = false;
+#ifndef SDK2013CE
 	m_bHackedByAlyx = false;
+#endif
 	StopLoitering();
 }
 
@@ -3088,6 +3099,20 @@ float CNPC_Manhack::GetMaxEnginePower()
 	return 1.0f;
 }
 
+#ifdef SDK2013CE
+//-----------------------------------------------------------------------------
+// Purpose: Option to restore Alyx's interactions with non-rollermines
+//-----------------------------------------------------------------------------
+bool CNPC_Manhack::CanInteractWith( CAI_BaseNPC *pUser )
+{
+#ifdef HL2_EPISODIC
+	return npc_alyx_interact_manhacks.GetBool();
+#else
+	return false;
+#endif
+}
+#endif
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -3199,16 +3224,43 @@ void CNPC_Manhack::SetEyeState( int state )
 			if ( m_pEyeGlow )
 			{
 				//Toggle our state
+#ifdef SDK2013CE
+				// Makes it easier to distinguish between hostile and friendly manhacks.
+				if( m_bHackedByAlyx )
+				{
+					m_pEyeGlow->SetColor( 0, 0, 255 );
+					m_pEyeGlow->SetScale( 0.35f, 0.6f );
+				}
+				else
+				{
+					m_pEyeGlow->SetColor( 255, 128, 0 );
+					m_pEyeGlow->SetScale( 0.15f, 0.1f );
+				}
+#else
 				m_pEyeGlow->SetColor( 255, 128, 0 );
 				m_pEyeGlow->SetScale( 0.15f, 0.1f );
+#endif
 				m_pEyeGlow->SetBrightness( 164, 0.1f );
 				m_pEyeGlow->m_nRenderFX = kRenderFxStrobeFast;
 			}
 			
 			if ( m_pLightGlow )
 			{
+#ifdef SDK2013CE
+				if( m_bHackedByAlyx )
+				{
+					m_pLightGlow->SetColor( 0, 0, 255 );
+					m_pLightGlow->SetScale( 0.35f, 0.6f );
+				}
+				else
+				{
+					m_pLightGlow->SetColor( 255, 128, 0 );
+					m_pLightGlow->SetScale( 0.15f, 0.1f );
+				}
+#else
 				m_pLightGlow->SetColor( 255, 128, 0 );
 				m_pLightGlow->SetScale( 0.15f, 0.1f );
+#endif
 				m_pLightGlow->SetBrightness( 164, 0.1f );
 				m_pLightGlow->m_nRenderFX = kRenderFxStrobeFast;
 			}

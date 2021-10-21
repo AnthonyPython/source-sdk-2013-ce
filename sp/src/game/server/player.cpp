@@ -7965,6 +7965,9 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 
 		SendPropInt			( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
 		SendPropFloat		( SENDINFO( m_flLaggedMovementValue ), 0, SPROP_NOSCALE ),
+		// Transmitted from the server for internal player spawnflags.
+		// See baseplayer_shared.h for more details.
+		//SendPropInt(SENDINFO(m_spawnflags), 3, SPROP_UNSIGNED, SendProxy_ShiftPlayerSpawnflags),
 
 	END_SEND_TABLE()
 
@@ -8066,6 +8069,12 @@ void CBasePlayer::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 {
 }
 
+#if 0
+CBaseEntity* CBasePlayer::GetHeldObject(void)
+{
+	return NULL;
+}
+#endif
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------

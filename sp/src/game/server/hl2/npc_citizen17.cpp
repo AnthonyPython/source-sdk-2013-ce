@@ -247,6 +247,10 @@ class CMattsPipe : public CWeaponCrowbar
 	void SetPickupTouch( void )	{	/* do nothing */ }
 };
 
+#ifdef SDK2013CE
+LINK_ENTITY_TO_CLASS(weapon_mattpipe, CMattsPipe);
+#endif
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
@@ -335,6 +339,10 @@ BEGIN_DATADESC( CNPC_Citizen )
 	DEFINE_KEYFIELD(	m_bNotifyNavFailBlocked,	FIELD_BOOLEAN, "notifynavfailblocked" ),
 	DEFINE_KEYFIELD(	m_bNeverLeavePlayerSquad,	FIELD_BOOLEAN, "neverleaveplayersquad" ),
 	DEFINE_KEYFIELD(	m_iszDenyCommandConcept,	FIELD_STRING, "denycommandconcept" ),
+#ifdef SDK2013CE
+	DEFINE_INPUT(m_bTossesMedkits, FIELD_BOOLEAN, "SetTossMedkits"),
+	DEFINE_KEYFIELD(m_bAlternateAiming, FIELD_BOOLEAN, "AlternateAiming"),
+#endif
 
 	DEFINE_OUTPUT(		m_OnJoinedPlayerSquad,	"OnJoinedPlayerSquad" ),
 	DEFINE_OUTPUT(		m_OnLeftPlayerSquad,	"OnLeftPlayerSquad" ),
@@ -352,7 +360,7 @@ BEGIN_DATADESC( CNPC_Citizen )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetAmmoResupplierOn",	InputSetAmmoResupplierOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetAmmoResupplierOff",	InputSetAmmoResupplierOff ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SpeakIdleResponse", InputSpeakIdleResponse ),
-	DEFINE_INPUTFUNC( FIELD_INTEGER,	"AddCapability", InputAddCapability),
+	
 
 #if HL2_EPISODIC
 	DEFINE_INPUTFUNC( FIELD_VOID,   "ThrowHealthKit", InputForceHealthKitToss ),
@@ -375,6 +383,10 @@ bool CNPC_Citizen::CreateBehaviors()
 {
 	BaseClass::CreateBehaviors();
 	AddBehavior( &m_FuncTankBehavior );
+#ifdef SDK2013CE
+	AddBehavior( &m_RappelBehavior );
+	AddBehavior( &m_PolicingBehavior );
+#endif
 	
 	return true;
 }
@@ -383,7 +395,12 @@ bool CNPC_Citizen::CreateBehaviors()
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::Precache()
 {
+#ifdef SDK2013CE
+	// CNPC_PlayerCompanion::Precache() is responsible for calling this now
+	BaseClass::Precache();
+#else
 	SelectModel();
+#endif
 	SelectExpressionType();
 
 	if ( !npc_citizen_dont_precache_all.GetBool() )
@@ -420,7 +437,9 @@ void CNPC_Citizen::Precache()
 		}
 	}
 
+#ifndef SDK2013CE // See above
 	BaseClass::Precache();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -482,7 +501,26 @@ void CNPC_Citizen::Spawn()
 	m_bShouldPatrol = false;
 	m_iHealth = sk_citizen_health.GetFloat();
 	
-	
+#ifdef SDK2013CE
+	// Now only gets citizen_trains.
+	if ( GetMoveParent() && FClassnameIs( GetMoveParent(), "func_tracktrain" ) )
+	{
+		if ( NameMatches("citizen_train_2") )
+		{
+			CapabilitiesRemove( bits_CAP_MOVE_GROUND );
+			SetMoveType( MOVETYPE_NONE );
+			SetSequenceByName( "d1_t01_TrainRide_Sit_Idle" );
+			SetIdealActivity( ACT_DO_NOT_DISTURB );
+		}
+		else if ( NameMatches("citizen_train_1") )
+		{
+			CapabilitiesRemove( bits_CAP_MOVE_GROUND );
+			SetMoveType( MOVETYPE_NONE );
+			SetSequenceByName( "d1_t01_TrainRide_Stand" );
+			SetIdealActivity( ACT_DO_NOT_DISTURB );
+		}
+	}
+#else
 	// Are we on a train? Used in trainstation to have NPCs on trains.
 	if ( GetMoveParent() && FClassnameIs( GetMoveParent(), "func_tracktrain" ) )
 	{
@@ -499,6 +537,7 @@ void CNPC_Citizen::Spawn()
 			SetIdealActivity( ACT_DO_NOT_DISTURB );
 		}
 	}
+#endif
 
 	m_flStopManhackFlinch = -1;
 
@@ -753,7 +792,11 @@ void CNPC_Citizen::SelectExpressionType()
 void CNPC_Citizen::FixupMattWeapon()
 {
 	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+#ifdef SDK2013CE
+	if ( pWeapon && EntIsClass( pWeapon, gm_isz_class_Crowbar ) && NameMatches( "matt" ) )
+#else
 	if ( pWeapon && pWeapon->ClassMatches( "weapon_crowbar" ) && NameMatches( "matt" ) )
+#endif
 	{
 		Weapon_Drop( pWeapon );
 		UTIL_Remove( pWeapon );
@@ -1167,6 +1210,19 @@ int CNPC_Citizen::SelectFailSchedule( int failedSchedule, int failedTask, AI_Tas
 //-----------------------------------------------------------------------------
 int CNPC_Citizen::SelectSchedule()
 {
+#ifdef SDK2013CE
+	if ( IsWaitingToRappel() && BehaviorSelectSchedule() )
+	{
+		return BaseClass::SelectSchedule();
+	}
+
+	if ( GetMoveType() == MOVETYPE_NONE && !Q_strncmp(STRING(GetEntityName()), "citizen_train_", 14) )
+	{
+		// Only "sit on train" if we're a citizen_train_
+		Assert( GetMoveParent() && FClassnameIs( GetMoveParent(), "func_tracktrain" ) );
+		return SCHED_CITIZEN_SIT_ON_TRAIN;
+	}
+#else
 	// If we can't move, we're on a train, and should be sitting.
 	if ( GetMoveType() == MOVETYPE_NONE )
 	{
@@ -1175,13 +1231,23 @@ int CNPC_Citizen::SelectSchedule()
 		Assert( GetMoveParent() && FClassnameIs( GetMoveParent(), "func_tracktrain" ) );
 		return SCHED_CITIZEN_SIT_ON_TRAIN;
 	}
+#endif
 
+#ifdef SDK2013CE
+	if ( GetActiveWeapon() && EntIsClass(GetActiveWeapon(), gm_isz_class_RPG) )
+	{
+		CWeaponRPG *pRPG = static_cast<CWeaponRPG*>(GetActiveWeapon());
+#else
 	CWeaponRPG *pRPG = dynamic_cast<CWeaponRPG*>(GetActiveWeapon());
+#endif
 	if ( pRPG && pRPG->IsGuiding() )
 	{
 		DevMsg( "Citizen in select schedule but RPG is guiding?\n");
 		pRPG->StopGuiding();
 	}
+#ifdef SDK2013CE
+	}
+#endif
 	
 	return BaseClass::SelectSchedule();
 }
@@ -1481,9 +1547,15 @@ int CNPC_Citizen::TranslateSchedule( int scheduleType )
 
 	case SCHED_RANGE_ATTACK1:
 		// If we have an RPG, we use a custom schedule for it
+#ifdef MAPBASE
+		if ( !IsMortar( GetEnemy() ) && GetActiveWeapon() && EntIsClass(GetActiveWeapon(), gm_isz_class_RPG) )
+		{
+			if ( GetEnemy() && EntIsClass(GetEnemy(), gm_isz_class_Strider) )
+#else
 		if ( !IsMortar( GetEnemy() ) && GetActiveWeapon() && FClassnameIs( GetActiveWeapon(), "weapon_rpg" ) )
 		{
 			if ( GetEnemy() && GetEnemy()->ClassMatches( "npc_strider" ) )
+#endif
 			{
 				if (OccupyStrategySlotRange( SQUAD_SLOT_CITIZEN_RPG1, SQUAD_SLOT_CITIZEN_RPG2 ) )
 				{
@@ -1496,14 +1568,21 @@ int CNPC_Citizen::TranslateSchedule( int scheduleType )
 			}
 			else
 			{
+#ifndef SDK2013CE // This has been disabled for now.
 				CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#ifdef SDK2013CE
+				// Don't avoid player if notarget is on
+				if ( pPlayer && GetEnemy() && !(pPlayer->GetFlags() & FL_NOTARGET) && ( ( GetEnemy()->GetAbsOrigin() - 
+#else
 				if ( pPlayer && GetEnemy() && ( ( GetEnemy()->GetAbsOrigin() - 
+#endif
 					pPlayer->GetAbsOrigin() ).LengthSqr() < RPG_SAFE_DISTANCE * RPG_SAFE_DISTANCE ) )
 				{
 					// Don't fire our RPG at an enemy too close to the player
 					return SCHED_STANDOFF;
 				}
 				else
+#endif
 				{
 					return SCHED_CITIZEN_RANGE_ATTACK1_RPG;
 				}
@@ -1769,13 +1848,20 @@ void CNPC_Citizen::RunTask( const Task_t *pTask )
 					}
 
 					Vector vecEnemyPos = GetEnemy()->BodyTarget(GetAbsOrigin(), false);
+#ifndef SDK2013CE // This has been disabled for now.
 					CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#ifdef SDK2013CE
+					// Don't avoid player if notarget is on
+					if ( pPlayer && !(pPlayer->GetFlags() & FL_NOTARGET) && ( ( vecEnemyPos - pPlayer->GetAbsOrigin() ).LengthSqr() < RPG_SAFE_DISTANCE * RPG_SAFE_DISTANCE ) )
+#else
 					if ( pPlayer && ( ( vecEnemyPos - pPlayer->GetAbsOrigin() ).LengthSqr() < RPG_SAFE_DISTANCE * RPG_SAFE_DISTANCE ) )
+#endif
 					{
 						m_bRPGAvoidPlayer = true;
 						Speak( TLK_WATCHOUT );
 					}
 					else
+#endif
 					{
 						// Pull the laserdot towards the target
 						Vector vecToTarget = (vecEnemyPos - vecLaserPos);
@@ -1840,9 +1926,18 @@ Activity CNPC_Citizen::NPC_TranslateActivity( Activity activity )
 {
 	if ( activity == ACT_MELEE_ATTACK1 )
 	{
+#ifdef SDK2013CE
+		// It could be the new weapon punt activity.
+		if (GetActiveWeapon() && GetActiveWeapon()->IsMeleeWeapon())
+		{
+			return ACT_MELEE_ATTACK_SWING;
+		}
+#else
 		return ACT_MELEE_ATTACK_SWING;
+#endif
 	}
 
+#ifndef SDK2013CE // Covered by the new backup activity system
 	// !!!HACK - Citizens don't have the required animations for shotguns, 
 	// so trick them into using the rifle counterparts for now (sjb)
 	if ( activity == ACT_RUN_AIM_SHOTGUN )
@@ -1853,6 +1948,29 @@ Activity CNPC_Citizen::NPC_TranslateActivity( Activity activity )
 		return ACT_IDLE_ANGRY_SMG1;
 	if ( activity == ACT_RANGE_ATTACK_SHOTGUN_LOW )
 		return ACT_RANGE_ATTACK_SMG1_LOW;
+#endif
+
+#ifdef SDK2013CE
+	if (m_bAlternateAiming)
+	{
+		if (activity == ACT_RUN_AIM_RIFLE)
+			return ACT_RUN_AIM_RIFLE_STIMULATED;
+		if (activity == ACT_WALK_AIM_RIFLE)
+			return ACT_WALK_AIM_RIFLE_STIMULATED;
+
+		if (activity == ACT_RUN_AIM_AR2)
+			return ACT_RUN_AIM_AR2_STIMULATED;
+		if (activity == ACT_WALK_AIM_AR2)
+			return ACT_WALK_AIM_AR2_STIMULATED;
+
+#ifdef EXPANDED_HL2_WEAPON_ACTIVITIES
+		if (activity == ACT_RUN_AIM_PISTOL)
+			return ACT_RUN_AIM_PISTOL_STIMULATED;
+		if (activity == ACT_WALK_AIM_PISTOL)
+			return ACT_WALK_AIM_PISTOL_STIMULATED;
+#endif
+	}
+#endif
 
 	return BaseClass::NPC_TranslateActivity( activity );
 }
@@ -1920,6 +2038,7 @@ void CNPC_Citizen::HandleAnimEvent( animevent_t *pEvent )
 	}
 }
 
+#ifndef SDK2013CE // Moved to CAI_BaseNPC
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 void CNPC_Citizen::PickupItem( CBaseEntity *pItem )
@@ -1946,6 +2065,7 @@ void CNPC_Citizen::PickupItem( CBaseEntity *pItem )
 		DevMsg("Citizen doesn't know how to pick up %s!\n", pItem->GetClassname() );
 	}
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2094,7 +2214,12 @@ bool CNPC_Citizen::IsManhackMeleeCombatant()
 {
 	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 	CBaseEntity *pEnemy = GetEnemy();
+#ifdef SDK2013CE
+	// Any melee weapon passes
+	return ( pEnemy && pWeapon && pEnemy->Classify() == CLASS_MANHACK && pWeapon->IsMeleeWeapon() );
+#else
 	return ( pEnemy && pWeapon && pEnemy->Classify() == CLASS_MANHACK && pWeapon->ClassMatches( "weapon_crowbar" ) );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -2105,6 +2230,14 @@ Vector CNPC_Citizen::GetActualShootPosition( const Vector &shootOrigin )
 {
 	Vector vecTarget = BaseClass::GetActualShootPosition( shootOrigin );
 
+#ifdef SDK2013CE
+	// The gunship RPG code does not appear to be funcitonal, so only set the laser position.
+	if ( GetActiveWeapon() && EntIsClass(GetActiveWeapon(), gm_isz_class_RPG) && GetEnemy() )
+	{
+		CWeaponRPG *pRPG = static_cast<CWeaponRPG*>(GetActiveWeapon());
+		pRPG->SetNPCLaserPosition( vecTarget );
+	}
+#else
 	CWeaponRPG *pRPG = dynamic_cast<CWeaponRPG*>(GetActiveWeapon());
 	// If we're firing an RPG at a gunship, aim off to it's side, because we'll auger towards it.
 	if ( pRPG && GetEnemy() )
@@ -2144,8 +2277,8 @@ Vector CNPC_Citizen::GetActualShootPosition( const Vector &shootOrigin )
 		{
 			pRPG->SetNPCLaserPosition( vecTarget );
 		}
-
 	}
+#endif
 
 	return vecTarget;
 }
@@ -2196,19 +2329,31 @@ bool CNPC_Citizen::ShouldLookForBetterWeapon()
 		{
 			bool bDefer = false;
 
+#ifdef SDK2013CE
+			if ( EntIsClass(pWeapon, gm_isz_class_AR2) )
+#else
 			if( FClassnameIs( pWeapon, "weapon_ar2" ) )
+#endif
 			{
 				// Content to keep this weapon forever
 				m_flNextWeaponSearchTime = OTHER_DEFER_SEARCH_TIME;
 				bDefer = true;
 			}
+#ifdef SDK2013CE
+			else if( EntIsClass(pWeapon, gm_isz_class_RPG) )
+#else
 			else if( FClassnameIs( pWeapon, "weapon_rpg" ) )
+#endif
 			{
 				// Content to keep this weapon forever
 				m_flNextWeaponSearchTime = OTHER_DEFER_SEARCH_TIME;
 				bDefer = true;
 			}
+#ifdef SDK2013CE
+			else if ( EntIsClass(pWeapon, gm_isz_class_Shotgun) )
+#else
 			else if( FClassnameIs( pWeapon, "weapon_shotgun" ) )
+#endif
 			{
 				// Shotgunners do not defer their weapon search indefinitely.
 				// If more than one citizen in the squad has a shotgun, we force
@@ -2338,6 +2483,11 @@ bool CNPC_Citizen::CanJoinPlayerSquad()
 
 	if ( IRelationType( UTIL_GetLocalPlayer() ) != D_LI )
 		return false;
+
+#ifdef SDK2013CE
+	if ( IsWaitingToRappel() )
+		return false;
+#endif
 
 	return true;
 }
@@ -2555,7 +2705,11 @@ void CNPC_Citizen::MoveOrder( const Vector &vecDest, CAI_BaseNPC **Allies, int n
 	if ( !AI_IsSinglePlayer() )
 		return;
 
+#ifdef SDK2013CE
+	if ( m_iszDenyCommandConcept != NULL_STRING )
+#else
 	if( hl2_episodic.GetBool() && m_iszDenyCommandConcept != NULL_STRING )
+#endif
 	{
 		SpeakCommandResponse( STRING(m_iszDenyCommandConcept) );
 		return;
@@ -2665,6 +2819,34 @@ void CNPC_Citizen::CommanderUse( CBaseEntity *pActivator, CBaseEntity *pCaller, 
 		}
 		else if ( GetCurSchedule() && ConditionInterruptsCurSchedule( COND_IDLE_INTERRUPT ) )
 		{
+#ifndef SDK2013CE
+			// Just do regular idle question behavior so question groups, etc. work on +USE.
+			if ( IsAllowedToSpeak( TLK_QUESTION, true ) )
+			{
+				// 1 = Old "SpeakIdleResponse" behavior
+				// 2, 3 = AskQuestion() for QA groups, etc.
+				// 4 = Just speak
+				int iRandom = random->RandomInt(1, 4);
+				if ( iRandom == 1 )
+				{
+					CBaseEntity *pRespondant = FindSpeechTarget( AIST_NPCS );
+					if ( pRespondant )
+					{
+						g_EventQueue.AddEvent( pRespondant, "SpeakIdleResponse", ( GetTimeSpeechComplete() - gpGlobals->curtime ) + .2, this, this );
+					}
+				}
+				if ( iRandom < 4 )
+				{
+					// Ask someone else
+					AskQuestionNow();
+				}
+				else
+				{
+					// Just speak
+					Speak( TLK_QUESTION );
+				}
+			}
+#else
 			if ( SpeakIfAllowed( TLK_QUESTION, NULL, true ) )
 			{
 				if ( random->RandomInt( 1, 4 ) < 4 )
@@ -2676,6 +2858,7 @@ void CNPC_Citizen::CommanderUse( CBaseEntity *pActivator, CBaseEntity *pCaller, 
 					}
 				}
 			}
+#endif
 		}
 	}
 }
@@ -3417,7 +3600,11 @@ bool CNPC_Citizen::ShouldHealTarget( CBaseEntity *pTarget, bool bActiveUse )
 {
 	Disposition_t disposition;
 	
+#ifdef SDK2013CE
+	if ( pTarget && ( ( disposition = IRelationType( pTarget ) ) != D_LI && disposition != D_NU ) )
+#else
 	if ( !pTarget && ( ( disposition = IRelationType( pTarget ) ) != D_LI && disposition != D_NU ) )
+#endif
 		return false;
 
 	// Don't heal if I'm in the middle of talking
@@ -3517,7 +3704,11 @@ bool CNPC_Citizen::ShouldHealTossTarget( CBaseEntity *pTarget, bool bActiveUse )
 	if ( !IsMedic() )
 		return false;
 	
+#ifdef SDK2013CE
+	if ( pTarget && ( ( disposition = IRelationType( pTarget ) ) != D_LI && disposition != D_NU ) )
+#else
 	if ( !pTarget && ( ( disposition = IRelationType( pTarget ) ) != D_LI && disposition != D_NU ) )
+#endif
 		return false;
 
 	// Don't heal if I'm in the middle of talking
@@ -3584,6 +3775,11 @@ void CNPC_Citizen::Heal()
 		  return;
 
 	CBaseEntity *pTarget = GetTarget();
+
+#ifdef SDK2013CE
+	if ( !pTarget )
+		return;
+#endif
 
 	Vector target = pTarget->GetAbsOrigin() - GetAbsOrigin();
 	if ( target.Length() > HEAL_TARGET_RANGE * 2 )
@@ -3835,13 +4031,39 @@ void CNPC_Citizen::InputSpeakIdleResponse( inputdata_t &inputdata )
 	SpeakIfAllowed( TLK_ANSWER, NULL, true );
 }
 
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void CNPC_Citizen::InputAddCapability(inputdata_t& inputdata)
+#ifdef SDK2013CE
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : &inputdata - 
+//-----------------------------------------------------------------------------
+void CNPC_Citizen::InputSetPoliceGoal( inputdata_t &inputdata )
 {
-	CapabilitiesAdd(inputdata.value.Int());
+	if (/*!inputdata.value.String() ||*/ inputdata.value.String()[0] == 0)
+	{
+		m_PolicingBehavior.Disable();
+		return;
+	}
+
+	CBaseEntity *pGoal = gEntList.FindEntityByName( NULL, inputdata.value.String() );
+
+	if ( pGoal == NULL )
+	{
+		DevMsg( "SetPoliceGoal: %s (%s) unable to find ai_goal_police: %s\n", GetClassname(), GetDebugName(), inputdata.value.String() );
+		return;
+	}
+
+	CAI_PoliceGoal *pPoliceGoal = dynamic_cast<CAI_PoliceGoal *>(pGoal);
+
+	if ( pPoliceGoal == NULL )
+	{
+		DevMsg( "SetPoliceGoal: %s (%s)'s target %s is not an ai_goal_police entity!\n", GetClassname(), GetDebugName(), inputdata.value.String() );
+		return;
+	}
+
+	m_PolicingBehavior.Enable( pPoliceGoal );
 }
+#endif
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::DeathSound( const CTakeDamageInfo &info )

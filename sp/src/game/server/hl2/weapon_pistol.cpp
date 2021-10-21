@@ -52,6 +52,10 @@ public:
 	void	AddViewKick( void );
 	void	DryFire( void );
 	void	Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+#ifdef SDK2013CE
+	void	FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir );
+	void	Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
+#endif
 
 	void	UpdatePenaltyTime( void );
 
@@ -104,6 +108,12 @@ public:
 		return 0.5f; 
 	}
 
+#ifdef SDK2013CE
+	// Pistols are their own backup activities
+	virtual acttable_t		*GetBackupActivityList() { return NULL; }
+	virtual int				GetBackupActivityListCount() { return 0; }
+#endif
+
 	DECLARE_ACTTABLE();
 
 private:
@@ -145,10 +155,108 @@ acttable_t	CWeaponPistol::m_acttable[] =
 	{ ACT_GESTURE_RELOAD,			ACT_GESTURE_RELOAD_PISTOL,		false },
 	{ ACT_WALK,						ACT_WALK_PISTOL,				false },
 	{ ACT_RUN,						ACT_RUN_PISTOL,					false },
+
+#ifdef SDK2013CE
+	// 
+	// Activities ported from weapon_alyxgun below
+	// 
+
+#ifdef EXPANDED_HL2_WEAPON_ACTIVITIES
+	// Readiness activities (not aiming)
+	{ ACT_IDLE_RELAXED,				ACT_IDLE_PISTOL_RELAXED,		false },//never aims
+	{ ACT_IDLE_STIMULATED,			ACT_IDLE_PISTOL_STIMULATED,		false },
+	{ ACT_IDLE_AGITATED,			ACT_IDLE_ANGRY_PISTOL,			false },//always aims
+	{ ACT_IDLE_STEALTH,				ACT_IDLE_STEALTH_PISTOL,		false },
+
+	{ ACT_WALK_RELAXED,				ACT_WALK_PISTOL_RELAXED,		false },//never aims
+	{ ACT_WALK_STIMULATED,			ACT_WALK_PISTOL_STIMULATED,		false },
+	{ ACT_WALK_AGITATED,			ACT_WALK_AIM_PISTOL,			false },//always aims
+	{ ACT_WALK_STEALTH,				ACT_WALK_STEALTH_PISTOL,		false },
+
+	{ ACT_RUN_RELAXED,				ACT_RUN_PISTOL_RELAXED,			false },//never aims
+	{ ACT_RUN_STIMULATED,			ACT_RUN_PISTOL_STIMULATED,		false },
+	{ ACT_RUN_AGITATED,				ACT_RUN_AIM_PISTOL,				false },//always aims
+	{ ACT_RUN_STEALTH,				ACT_RUN_STEALTH_PISTOL,			false },
+
+	// Readiness activities (aiming)
+	{ ACT_IDLE_AIM_RELAXED,			ACT_IDLE_PISTOL_RELAXED,		false },//never aims	
+	{ ACT_IDLE_AIM_STIMULATED,		ACT_IDLE_AIM_PISTOL_STIMULATED,	false },
+	{ ACT_IDLE_AIM_AGITATED,		ACT_IDLE_ANGRY_PISTOL,			false },//always aims
+	{ ACT_IDLE_AIM_STEALTH,			ACT_IDLE_STEALTH_PISTOL,		false },
+
+	{ ACT_WALK_AIM_RELAXED,			ACT_WALK_PISTOL_RELAXED,		false },//never aims
+	{ ACT_WALK_AIM_STIMULATED,		ACT_WALK_AIM_PISTOL,			false },
+	{ ACT_WALK_AIM_AGITATED,		ACT_WALK_AIM_PISTOL,			false },//always aims
+	{ ACT_WALK_AIM_STEALTH,			ACT_WALK_AIM_STEALTH_PISTOL,	false },//always aims
+
+	{ ACT_RUN_AIM_RELAXED,			ACT_RUN_PISTOL_RELAXED,			false },//never aims
+	{ ACT_RUN_AIM_STIMULATED,		ACT_RUN_AIM_PISTOL,				false },
+	{ ACT_RUN_AIM_AGITATED,			ACT_RUN_AIM_PISTOL,				false },//always aims
+	{ ACT_RUN_AIM_STEALTH,			ACT_RUN_AIM_STEALTH_PISTOL,		false },//always aims
+	//End readiness activities
+#else
+	// Readiness activities (not aiming)
+	{ ACT_IDLE_RELAXED,				ACT_IDLE_PISTOL,				false },//never aims
+	{ ACT_IDLE_STIMULATED,			ACT_IDLE_STIMULATED,			false },
+	{ ACT_IDLE_AGITATED,			ACT_IDLE_ANGRY_PISTOL,			false },//always aims
+	{ ACT_IDLE_STEALTH,				ACT_IDLE_STEALTH_PISTOL,		false },
+
+	{ ACT_WALK_RELAXED,				ACT_WALK,						false },//never aims
+	{ ACT_WALK_STIMULATED,			ACT_WALK_STIMULATED,			false },
+	{ ACT_WALK_AGITATED,			ACT_WALK_AIM_PISTOL,			false },//always aims
+	{ ACT_WALK_STEALTH,				ACT_WALK_STEALTH_PISTOL,		false },
+
+	{ ACT_RUN_RELAXED,				ACT_RUN,						false },//never aims
+	{ ACT_RUN_STIMULATED,			ACT_RUN_STIMULATED,				false },
+	{ ACT_RUN_AGITATED,				ACT_RUN_AIM_PISTOL,				false },//always aims
+	{ ACT_RUN_STEALTH,				ACT_RUN_STEALTH_PISTOL,			false },
+
+	// Readiness activities (aiming)
+	{ ACT_IDLE_AIM_RELAXED,			ACT_IDLE_PISTOL,				false },//never aims	
+	{ ACT_IDLE_AIM_STIMULATED,		ACT_IDLE_ANGRY_PISTOL,			false },
+	{ ACT_IDLE_AIM_AGITATED,		ACT_IDLE_ANGRY_PISTOL,			false },//always aims
+	{ ACT_IDLE_AIM_STEALTH,			ACT_IDLE_STEALTH_PISTOL,		false },
+
+	{ ACT_WALK_AIM_RELAXED,			ACT_WALK,						false },//never aims
+	{ ACT_WALK_AIM_STIMULATED,		ACT_WALK_AIM_PISTOL,			false },
+	{ ACT_WALK_AIM_AGITATED,		ACT_WALK_AIM_PISTOL,			false },//always aims
+	{ ACT_WALK_AIM_STEALTH,			ACT_WALK_AIM_STEALTH_PISTOL,	false },//always aims
+
+	{ ACT_RUN_AIM_RELAXED,			ACT_RUN,						false },//never aims
+	{ ACT_RUN_AIM_STIMULATED,		ACT_RUN_AIM_PISTOL,				false },
+	{ ACT_RUN_AIM_AGITATED,			ACT_RUN_AIM_PISTOL,				false },//always aims
+	{ ACT_RUN_AIM_STEALTH,			ACT_RUN_AIM_STEALTH_PISTOL,		false },//always aims
+	//End readiness activities
+#endif
+
+	// Crouch activities
+	{ ACT_CROUCHIDLE_STIMULATED,	ACT_CROUCHIDLE_STIMULATED,		false },
+	{ ACT_CROUCHIDLE_AIM_STIMULATED,ACT_RANGE_AIM_PISTOL_LOW,		false },//always aims
+	{ ACT_CROUCHIDLE_AGITATED,		ACT_RANGE_AIM_PISTOL_LOW,		false },//always aims
+
+	// Readiness translations
+	{ ACT_READINESS_RELAXED_TO_STIMULATED, ACT_READINESS_PISTOL_RELAXED_TO_STIMULATED, false },
+	{ ACT_READINESS_RELAXED_TO_STIMULATED_WALK, ACT_READINESS_PISTOL_RELAXED_TO_STIMULATED_WALK, false },
+	{ ACT_READINESS_AGITATED_TO_STIMULATED, ACT_READINESS_PISTOL_AGITATED_TO_STIMULATED, false },
+	{ ACT_READINESS_STIMULATED_TO_RELAXED, ACT_READINESS_PISTOL_STIMULATED_TO_RELAXED, false },
+#endif
 };
 
 
 IMPLEMENT_ACTTABLE( CWeaponPistol );
+
+#ifdef SDK2013CE
+// Allows Weapon_BackupActivity() to access the pistol's activity table.
+acttable_t *GetPistolActtable()
+{
+	return CWeaponPistol::m_acttable;
+}
+
+int GetPistolActtableCount()
+{
+	return ARRAYSIZE(CWeaponPistol::m_acttable);
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -193,12 +301,16 @@ void CWeaponPistol::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 
 			vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
 
+#ifdef SDK2013CE
+			FireNPCPrimaryAttack( pOperator, vecShootOrigin, vecShootDir );
+#else
 			CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
 
 			WeaponSound( SINGLE_NPC );
 			pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
 			pOperator->DoMuzzleFlash();
 			m_iClip1 = m_iClip1 - 1;
+#endif
 		}
 		break;
 		default:
@@ -206,6 +318,36 @@ void CWeaponPistol::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 			break;
 	}
 }
+
+#ifdef SDK2013CE
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CWeaponPistol::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir )
+{
+	CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
+
+	WeaponSound( SINGLE_NPC );
+	pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+	pOperator->DoMuzzleFlash();
+	m_iClip1 = m_iClip1 - 1;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Some things need this. (e.g. the new Force(X)Fire inputs or blindfire actbusy)
+//-----------------------------------------------------------------------------
+void CWeaponPistol::Operator_ForceNPCFire( CBaseCombatCharacter *pOperator, bool bSecondary )
+{
+	// Ensure we have enough rounds in the clip
+	m_iClip1++;
+
+	Vector vecShootOrigin, vecShootDir;
+	QAngle	angShootDir;
+	GetAttachment( LookupAttachment( "muzzle" ), vecShootOrigin, angShootDir );
+	AngleVectors( angShootDir, &vecShootDir );
+	FireNPCPrimaryAttack( pOperator, vecShootOrigin, vecShootDir );
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose:

@@ -816,7 +816,17 @@ bool CAI_PlayerAlly::SelectQuestionFriend( CBaseEntity *pFriend, AISpeechSelecti
 
 	// If we haven't said hello, say hello first.
 	// Only ever say hello to NPCs other than my type.
+#ifdef SDK2013CE
+	// Why only say hello to NPCs other than my type?
+	// Are citizens a hivemind? Do they not greet each other?
+	// They don't have any responses for it anyway, so SelectSpeechResponse() will fail
+	// and TLK_HELLO_NPC will be marked as spoken.
+	// 
+	// Responses could be added so modders/mappers can take advantage of this.
+	if ( !GetExpresser()->SpokeConcept( TLK_HELLO_NPC ) )
+#else
 	if ( !GetExpresser()->SpokeConcept( TLK_HELLO_NPC  ) && !FClassnameIs( this, pFriend->GetClassname()) )
+#endif
 	{
 		if ( SelectSpeechResponse( TLK_HELLO_NPC, NULL, pFriend, pSelection ) )
 			return true;
@@ -1077,6 +1087,24 @@ void CAI_PlayerAlly::Touch( CBaseEntity *pOther )
 	}
 }
 
+#ifdef SDK2013CE
+ConVar mapbase_ally_flinching("mapbase_ally_flinching", "1", FCVAR_ARCHIVE, "Enables/disables the new flinching animations.");
+//-----------------------------------------------------------------------------
+// Purpose: This is to adjust for the new citizen flinching animations,
+// as they would exist on all NPCs that use citizen animations.
+// 
+// Vortigaunts and Alyx in the Episodes are the only ones who can flinch normally,
+// and that's been rectified with their own functions. (they currently skip CAI_PlayerAlly's implementation)
+//-----------------------------------------------------------------------------
+bool CAI_PlayerAlly::CanFlinch( void )
+{
+	if (mapbase_ally_flinching.GetBool() != true)
+		return false;
+
+	return BaseClass::CanFlinch();
+}
+#endif
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CAI_PlayerAlly::OnKilledNPC( CBaseCombatCharacter *pKilled )
@@ -1087,6 +1115,10 @@ void CAI_PlayerAlly::OnKilledNPC( CBaseCombatCharacter *pKilled )
 			( pKilled->MyNPCPointer()->GetLastPlayerDamageTime() == 0 ||
 			  gpGlobals->curtime - pKilled->MyNPCPointer()->GetLastPlayerDamageTime() > 5 ) )
 		{
+#ifdef SDK2013CE
+			m_hPotentialSpeechTarget = pKilled;
+			SetSpeechTarget(pKilled);
+#endif
 			SpeakIfAllowed( TLK_ENEMY_DEAD );
 		}
 	}
@@ -1185,6 +1217,10 @@ void CAI_PlayerAlly::Event_Killed( const CTakeDamageInfo &info )
 	CAI_PlayerAlly *pMourner = dynamic_cast<CAI_PlayerAlly *>(FindSpeechTarget( AIST_NPCS ));
 	if ( pMourner )
 	{
+#ifdef SDK2013CE
+		pMourner->m_hPotentialSpeechTarget = this;
+		pMourner->SetSpeechTarget(this);
+#endif
 		pMourner->SpeakIfAllowed( TLK_ALLY_KILLED );
 	}
 
@@ -1286,6 +1322,11 @@ bool CAI_PlayerAlly::IsValidSpeechTarget( int flags, CBaseEntity *pEntity )
 		// Don't bother people who don't want to be bothered
 		if ( !pNPC->CanBeUsedAsAFriend() )
 			return false;
+
+#ifdef SDK2013CE
+		if (flags & AIST_NOT_GAGGED && pNPC->HasSpawnFlags(SF_NPC_GAG))
+			return false;
+#endif
 	}
 	
 	if ( flags & AIST_FACING_TARGET )
@@ -1597,11 +1638,22 @@ void CAI_PlayerAlly::ModifyOrAppendCriteria( AI_CriteriaSet& set )
 {
 	BaseClass::ModifyOrAppendCriteria( set );
 
+#ifdef SDK2013CE
+	// For the below speechtarget criteria
+	if (GetSpeechTarget() && !m_hPotentialSpeechTarget)
+		m_hPotentialSpeechTarget = GetSpeechTarget();
+#endif
+
 	if ( m_hPotentialSpeechTarget )
 	{
 		set.AppendCriteria( "speechtarget", m_hPotentialSpeechTarget->GetClassname() );
 		set.AppendCriteria( "speechtargetname", STRING(m_hPotentialSpeechTarget->GetEntityName()) );
 		set.AppendCriteria( "randomnum", UTIL_VarArgs("%d", m_iQARandomNumber) );
+
+#ifdef SDK2013CE
+		// Speech target contexts.
+		m_hPotentialSpeechTarget->AppendContextToCriteria(set, "speechtarget_");
+#endif
 	}
 
 	// Do we have a speech filter? If so, append it's criteria too

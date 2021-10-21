@@ -219,13 +219,23 @@ bool PassServerEntityFilter( const IHandleEntity *pTouch, const IHandleEntity *p
 	if ( !pEntTouch || !pEntPass )
 		return true;
 
+#ifdef SDK2013CE
 	// don't clip against own missiles
-	if ( pEntTouch->GetOwnerEntity() == pEntPass )
+	if (pEntTouch->GetOwnerEntity() == pEntPass && !pEntTouch->IsSolidFlagSet(FSOLID_COLLIDE_WITH_OWNER))
 		return false;
-	
+
 	// don't clip against owner
-	if ( pEntPass->GetOwnerEntity() == pEntTouch )
-		return false;	
+	if (pEntPass->GetOwnerEntity() == pEntTouch && !pEntPass->IsSolidFlagSet(FSOLID_COLLIDE_WITH_OWNER))
+		return false;
+#else
+	// don't clip against own missiles
+	if (pEntTouch->GetOwnerEntity() == pEntPass)
+		return false;
+
+	// don't clip against owner
+	if (pEntPass->GetOwnerEntity() == pEntTouch)
+		return false;
+#endif	
 
 
 	return true;

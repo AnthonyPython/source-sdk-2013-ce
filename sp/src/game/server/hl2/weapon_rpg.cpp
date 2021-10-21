@@ -43,6 +43,10 @@
 
 static ConVar sk_apc_missile_damage("sk_apc_missile_damage", "15");
 ConVar rpg_missle_use_custom_detonators( "rpg_missle_use_custom_detonators", "1" );
+#ifdef SDK2013CE
+ConVar weapon_rpg_use_old_behavior( "weapon_rpg_use_old_behavior", "1" );
+ConVar weapon_rpg_fire_rate( "weapon_rpg_fire_rate", "4.0" );
+#endif
 
 #define APC_MISSILE_DAMAGE	sk_apc_missile_damage.GetFloat()
 
@@ -1395,6 +1399,10 @@ PRECACHE_WEAPON_REGISTER(weapon_rpg);
 acttable_t	CWeaponRPG::m_acttable[] = 
 {
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_RPG, true },
+#ifdef EXPANDED_HL2_WEAPON_ACTIVITIES
+	{ ACT_RANGE_AIM_LOW,			ACT_RANGE_AIM_RPG_LOW,			false },
+	{ ACT_RANGE_ATTACK1_LOW,		ACT_RANGE_ATTACK_RPG_LOW,		false },
+#endif
 
 	{ ACT_IDLE_RELAXED,				ACT_IDLE_RPG_RELAXED,			true },
 	{ ACT_IDLE_STIMULATED,			ACT_IDLE_ANGRY_RPG,				true },
@@ -1407,6 +1415,11 @@ acttable_t	CWeaponRPG::m_acttable[] =
 	{ ACT_RUN,						ACT_RUN_RPG,					true },
 	{ ACT_RUN_CROUCH,				ACT_RUN_CROUCH_RPG,				true },
 	{ ACT_COVER_LOW,				ACT_COVER_LOW_RPG,				true },
+
+#ifdef EXPANDED_HL2_WEAPON_ACTIVITIES
+	{ ACT_ARM,						ACT_ARM_RIFLE,					false },
+	{ ACT_DISARM,					ACT_DISARM_RIFLE,				false },
+#endif
 };
 
 IMPLEMENT_ACTTABLE(CWeaponRPG);
@@ -2039,7 +2052,20 @@ bool CWeaponRPG::WeaponLOSCondition( const Vector &ownerPos, const Vector &targe
 			Vector vecShootDir = npcOwner->GetActualShootTrajectory( vecMuzzle );
 
 			// Make sure I have a good 10 feet of wide clearance in front, or I'll blow my teeth out.
+#ifdef SDK2013CE
+			// Oh, and don't collide with ourselves or our owner. That would be stupid.
+			if (!weapon_rpg_use_old_behavior.GetBool())
+			{
+				CTraceFilterSkipTwoEntities pTraceFilter( this, GetOwner(), COLLISION_GROUP_NONE );
+				AI_TraceHull( vecMuzzle, vecMuzzle + vecShootDir * (10.0f*12.0f), Vector( -24, -24, -24 ), Vector( 24, 24, 24 ), MASK_NPCSOLID, &pTraceFilter, &tr );
+			}
+			else
+			{
+#endif
 			AI_TraceHull( vecMuzzle, vecMuzzle + vecShootDir * (10.0f*12.0f), Vector( -24, -24, -24 ), Vector( 24, 24, 24 ), MASK_NPCSOLID, NULL, &tr );
+#ifdef SDK2013CE
+			}
+#endif
 
 			if( tr.fraction != 1.0f )
 				bResult = false;
@@ -2089,7 +2115,20 @@ int CWeaponRPG::WeaponRangeAttack1Condition( float flDot, float flDist )
 		Vector vecShootDir = pOwner->GetActualShootTrajectory( vecMuzzle );
 
 		// Make sure I have a good 10 feet of wide clearance in front, or I'll blow my teeth out.
+#ifdef SDK2013CE
+		// Oh, and don't collide with ourselves or our owner. That would be stupid.
+		if (!weapon_rpg_use_old_behavior.GetBool())
+		{
+			CTraceFilterSkipTwoEntities pTraceFilter( this, GetOwner(), COLLISION_GROUP_NONE );
+			AI_TraceHull( vecMuzzle, vecMuzzle + vecShootDir * (10.0f*12.0f), Vector( -24, -24, -24 ), Vector( 24, 24, 24 ), MASK_NPCSOLID, &pTraceFilter, &tr );
+		}
+		else
+		{
+#endif
 		AI_TraceHull( vecMuzzle, vecMuzzle + vecShootDir * (10.0f*12.0f), Vector( -24, -24, -24 ), Vector( 24, 24, 24 ), MASK_NPCSOLID, NULL, &tr );
+#ifdef SDK2013CE
+		}
+#endif
 
 		if( tr.fraction != 1.0 )
 		{
@@ -2212,6 +2251,23 @@ void CWeaponRPG::UpdateLaserEffects( void )
 		m_hLaserMuzzleSprite->SetScale( 0.1f + random->RandomFloat( -0.025f, 0.025f ) );
 	}
 }
+
+#ifdef SDK2013CE
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CWeaponRPG::SupportsBackupActivity(Activity activity)
+{
+	// NPCs shouldn't use their SMG activities to aim and fire RPGs while running.
+	if (activity == ACT_RUN_AIM ||
+		activity == ACT_WALK_AIM ||
+		activity == ACT_RUN_CROUCH_AIM ||
+		activity == ACT_WALK_CROUCH_AIM)
+		return false;
+
+	return true;
+}
+#endif
 
 //=============================================================================
 // Laser Dot

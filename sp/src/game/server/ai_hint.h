@@ -281,11 +281,19 @@ public:
 	float				Yaw( void );
 	CAI_Node			*GetNode( void );
 	string_t			GetGroup( void ) const			{ return m_NodeData.strGroup;	}
+#ifdef SDK2013CE
+	void				SetGroup( string_t iszNewGroup );
+#endif
 	CBaseEntity			*User( void ) const				{ return m_hHintOwner; };
 	Hint_e				HintType( void ) const			{ return (Hint_e)m_NodeData.nHintType;  };
 	void				SetHintType( int hintType, bool force = false );
 	string_t			HintActivityName( void ) const	{ return m_NodeData.iszActivityName; }
 	int					GetTargetNode( void ) const		{ return m_nTargetNodeID; }
+#ifdef SDK2013CE
+	// HACKHACK: This is for when target nodes need to be accessed before being sorted into engine IDs
+	int					GetTargetWCNodeID( void ) const	{ return m_NodeData.nTargetWCNodeID; }
+	int					GetWCNodeID( void ) const		{ return m_NodeData.nWCNodeID; }
+#endif
 	bool				IsDisabled( void ) const		{ return (m_NodeData.iDisabled != 0); }
 	void				SetDisabled( bool bDisabled	)	{ m_NodeData.iDisabled = bDisabled; }
 	void				DisableForSeconds( float flSeconds );
@@ -305,7 +313,13 @@ public:
 	bool				HintMatchesCriteria( CAI_BaseNPC *pNPC, const CHintCriteria &hintCriteria, const Vector &position, float *flNearestDistance, bool bIgnoreLock = false, bool bIgnoreHintType = false );
 	bool				IsInNodeFOV( CBaseEntity *pOther );
 
+#ifdef SDK2013CE
+	void				NPCHandleStartNav( CAI_BaseNPC *pNPC, bool bDefaultFacing );
+#endif
+
+#ifndef SDK2013CE
 private:
+#endif
 	void				Spawn( void );
 	virtual void		Activate();
 	virtual void		UpdateOnRemove( void );

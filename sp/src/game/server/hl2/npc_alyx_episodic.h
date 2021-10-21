@@ -54,6 +54,14 @@ public:
 	bool	OnBeginMoveAndShoot();
 	void	SpeakAttacking( void );
 
+#ifdef SDK2013CE
+	// This skips CAI_PlayerAlly's CanFlinch() function since Episodic Alyx can flinch to begin with.
+	virtual bool		CanFlinch( void ) { return CAI_BaseActor::CanFlinch(); }
+
+	// Use Alyx's default subtitle color (255,212,255)
+	//bool	GetGameTextSpeechParams( hudtextparms_t &params ) { params.r1 = 255; params.g1 = 212; params.b1 = 255; return BaseClass::GetGameTextSpeechParams( params ); }
+#endif
+
 	virtual float	GetJumpGravity() const		{ return 1.8f; }
 
 	// Crouching
@@ -83,6 +91,10 @@ public:
 	bool	CanSeeEntityInDarkness( CBaseEntity *pEntity );
 	bool	IsCoverPosition( const Vector &vecThreat, const Vector &vecPosition );
 	Activity NPC_TranslateActivity ( Activity activity );
+#ifdef SDK2013CE
+	Activity	Weapon_TranslateActivity( Activity baseAct, bool *pRequired = NULL );
+	Activity	Weapon_BackupActivity( Activity activity, bool weaponTranslationWasRequired = false, CBaseCombatWeapon *pSpecificWeapon = NULL );
+#endif
 	bool	ShouldDeferToFollowBehavior();
 	void	BuildScheduleTestBits();
 	bool	ShouldBehaviorSelectSchedule( CAI_BehaviorBase *pBehavior );

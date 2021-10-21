@@ -49,6 +49,24 @@ class CUserCmd;
 #define SF_WEAPON_NO_PLAYER_PICKUP	(1<<1)
 #define SF_WEAPON_NO_PHYSCANNON_PUNT (1<<2)
 
+#ifdef SDK2013CE
+// I really, REALLY hope no weapon uses their own spawnflags.
+// If you want yours to use spawnflags, start at 16 just to be safe.
+
+#define SF_WEAPON_NO_NPC_PICKUP	(1<<3) // Prevents NPCs from picking up the weapon.
+#define SF_WEAPON_PRESERVE_AMMO (1<<4) // Prevents the weapon from filling up to max automatically when dropped or picked up by players.
+#define SF_WEAPON_PRESERVE_NAME	(1<<5) // Prevents the weapon's name from being cleared upon being picked up by a player.
+#define SF_WEAPON_ALWAYS_TOUCHABLE	(1<<6) // Makes a weapon always touchable/pickupable, even through walls.
+
+// ----------------------------------------------
+// These spawnflags are not supposed to be used by level designers.
+// They're just my way of trying to avoid adding new variables
+// that have to stay in memory and save/load.
+// ----------------------------------------------
+#define SF_WEAPON_NO_AUTO_SWITCH_WHEN_EMPTY (1<<6) // So weapons with ammo preserved at 0 don't switch.
+#define SF_WEAPON_USED (1<<7) // Weapon is being +USE'd, not bumped
+#endif
+
 //Percent
 #define	CLIP_PERC_THRESHOLD		0.75f	
 
@@ -90,6 +108,28 @@ namespace vgui2
 {
 	typedef unsigned long HFont;
 }
+
+#ifdef SDK2013CE
+// ------------------
+// Weapon classes
+// ------------------
+// I found myself in situations where this is useful.
+// Their purpose is similar to Class_T on NPCs.
+
+//Weapon enums are lovly aren't they. yes indeed, idk why valve decided not to use them anymore. what a shame! -AnthonyP
+
+enum WeaponClass_t
+{
+	WEPCLASS_INVALID = 0,
+
+	WEPCLASS_HANDGUN,
+	WEPCLASS_RIFLE,
+	WEPCLASS_SHOTGUN,
+	WEPCLASS_HEAVY,
+
+	WEPCLASS_MELEE,
+};
+#endif
 
 // -----------------------------------------
 //	Vector cones
@@ -178,6 +218,16 @@ public:
 	// Subtypes are used to manage multiple weapons of the same type on the player.
 	virtual int				GetSubType( void ) { return m_iSubType; }
 	virtual void			SetSubType( int iType ) { m_iSubType = iType; }
+
+#ifdef SDK2013CE
+	virtual WeaponClass_t	WeaponClassify();
+	static WeaponClass_t	WeaponClassFromString(const char* str);
+
+	virtual bool			SupportsBackupActivity(Activity activity);
+	virtual acttable_t*		GetBackupActivityList();
+	virtual int				GetBackupActivityListCount();
+#endif
+
 
 	virtual void			Equip( CBaseCombatCharacter *pOwner );
 	virtual void			Drop( const Vector &vecVelocity );
@@ -401,6 +451,11 @@ public:
 	CNetworkVar(float, m_flIronsightedTime);
 
 	virtual bool				HasIronsights(void) { return GetWpnData().m_bhasIronsight; } //default yes; override and return false for weapons with no ironsights (like weapon_crowbar)
+
+#ifdef SDK2013CE
+// Originally created for the crossbow, can be used to add special NPC reloading behavior
+	virtual void			Reload_NPC(void);
+#endif
 	bool					IsIronsighted(void);
 	void					ToggleIronsights(void);
 	void					EnableIronsights(void);

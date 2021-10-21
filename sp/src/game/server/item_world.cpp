@@ -103,6 +103,14 @@ BEGIN_DATADESC( CItem )
 	DEFINE_THINKFUNC( FallThink ),
 #endif
 
+#ifdef SDK2013CE
+	//DEFINE_INPUTFUNC(FIELD_VOID, "EnablePlayerPickup", InputEnablePlayerPickup),
+	//DEFINE_INPUTFUNC(FIELD_VOID, "DisablePlayerPickup", InputDisablePlayerPickup),
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableNPCPickup", InputEnableNPCPickup),
+	DEFINE_INPUTFUNC(FIELD_VOID, "DisableNPCPickup", InputDisableNPCPickup),
+	DEFINE_INPUTFUNC(FIELD_VOID, "BreakConstraint", InputBreakConstraint),
+#endif
+
 	// Outputs
 	DEFINE_OUTPUT( m_OnPlayerTouch, "OnPlayerTouch" ),
 	DEFINE_OUTPUT( m_OnCacheInteraction, "OnCacheInteraction" ),
@@ -545,3 +553,50 @@ void CItem::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t reason )
 	// Restore the pickup box to the original
 	CollisionProp()->UseTriggerBounds( true, ITEM_PICKUP_BOX_BLOAT );
 }
+#ifdef SDK2013CE
+
+#if 0
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CItem::InputEnablePlayerPickup(inputdata_t& inputdata)
+{
+	RemoveSpawnFlags(SF_ITEM_NO_PLAYER_PICKUP);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CItem::InputDisablePlayerPickup(inputdata_t& inputdata)
+{
+	AddSpawnFlags(SF_ITEM_NO_PLAYER_PICKUP);
+}
+#endif
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CItem::InputEnableNPCPickup(inputdata_t& inputdata)
+{
+	RemoveSpawnFlags(SF_ITEM_NO_NPC_PICKUP);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CItem::InputDisableNPCPickup(inputdata_t& inputdata)
+{
+	AddSpawnFlags(SF_ITEM_NO_NPC_PICKUP);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CItem::InputBreakConstraint(inputdata_t& inputdata)
+{
+	if (m_pConstraint != NULL)
+	{
+		physenv->DestroyConstraint(m_pConstraint);
+		m_pConstraint = NULL;
+	}
+}
+#endif

@@ -388,7 +388,11 @@ BEGIN_DATADESC( CNPC_RollerMine )
 	DEFINE_FIELD( m_bBuried, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_wakeUp, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bEmbedOnGroundImpact, FIELD_BOOLEAN ),
+#ifdef SDK2013CE
+	DEFINE_KEYFIELD( m_bHackedByAlyx, FIELD_BOOLEAN, "Hacked" ),
+#else
 	DEFINE_FIELD( m_bHackedByAlyx, FIELD_BOOLEAN ),
+#endif
 
 	DEFINE_FIELD( m_bPowerDown,	FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flPowerDownTime,	FIELD_TIME ),
@@ -417,6 +421,7 @@ BEGIN_DATADESC( CNPC_RollerMine )
 
 	DEFINE_OUTPUT( m_OnPhysGunDrop, "OnPhysGunDrop" ),
 	DEFINE_OUTPUT( m_OnPhysGunPickup, "OnPhysGunPickup" ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Hack", InputDoInteraction),
 
 	DEFINE_BASENPCINTERACTABLE_DATADESC(),
 
@@ -543,6 +548,9 @@ void CNPC_RollerMine::Spawn( void )
 	BaseClass::Spawn();
 
 	AddEFlags( EFL_NO_DISSOLVE );
+#ifdef SDK2013CE
+	AddEFlags( EFL_NO_MEGAPHYSCANNON_RAGDOLL );
+#endif
 
 	CapabilitiesClear();
 	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_SQUAD );
@@ -1957,6 +1965,10 @@ void CNPC_RollerMine::NotifyInteraction( CAI_BaseNPC *pUser )
 	// Force the rollermine open here. At very least, this ensures that the 
 	// correct, smaller bounding box is recomputed around it.
 	Open();
+
+#ifdef SDK2013CE
+	m_OnHacked.FireOutput(pUser, this);
+#endif
 }
 
 //-----------------------------------------------------------------------------

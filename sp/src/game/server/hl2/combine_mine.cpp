@@ -105,6 +105,7 @@ BEGIN_DATADESC( CBounceBomb )
 
 	DEFINE_OUTPUT( m_OnPulledUp, "OnPulledUp" ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disarm", InputDisarm ),
+	DEFINE_INPUT(m_bUnavoidable, FIELD_BOOLEAN, "SetUnavoidable"),
 
 END_DATADESC()
 
@@ -1205,6 +1206,16 @@ CBasePlayer *CBounceBomb::HasPhysicsAttacker( float dt )
 		return m_hPhysicsAttacker;
 	}
 	return NULL;
+}
+
+bool CBounceBomb::ShouldBeAvoidedByCompanions()
+{
+#ifdef SDK2013CE
+	if (m_bUnavoidable)
+		return false;
+#endif
+
+	return !IsPlayerPlaced() && IsAwake();
 }
 
 //---------------------------------------------------------

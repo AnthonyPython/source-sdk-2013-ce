@@ -2775,6 +2775,13 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 			string_t iszArrivalText;
 
+#ifdef SDK2013CE
+			if ( m_hCine->m_iszPreIdle != NULL_STRING )
+			{
+				iszArrivalText = m_hCine->m_iszPreIdle;
+			}
+			else
+#endif
 			if ( m_hCine->m_iszEntry != NULL_STRING )
 			{
 				iszArrivalText = m_hCine->m_iszEntry;
@@ -2865,6 +2872,9 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 			//
 			if ( m_hCine->m_iszPreIdle != NULL_STRING )
 			{
+#ifndef SDK2013CE
+				m_hCine->OnPreIdleSequence( this );
+#endif
 				m_hCine->StartSequence( ( CAI_BaseNPC * )this, m_hCine->m_iszPreIdle, false );
 				if ( FStrEq( STRING( m_hCine->m_iszPreIdle ), STRING( m_hCine->m_iszPlay ) ) )
 				{
@@ -2977,7 +2987,16 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 	case TASK_ITEM_PICKUP:
 		{
-			SetIdealActivity( ACT_PICKUP_GROUND );
+#ifdef SDK2013CE
+			if (GetTarget() && fabs( GetTarget()->WorldSpaceCenter().z - GetAbsOrigin().z ) >= 12.0f)
+			{
+				SetIdealActivity( ACT_PICKUP_RACK );
+			}
+			else
+#endif
+			{
+				SetIdealActivity( ACT_PICKUP_GROUND );
+			}
 		}
 		break;
 
@@ -3918,15 +3937,25 @@ void CAI_BaseNPC::RunTask( const Task_t *pTask )
 			if ( m_hCine && m_hCine->IsTimeToStart() )
 			{
 				TaskComplete();
+#ifndef SDK2013CE
+				m_hCine->OnBeginSequence(this);
+#else
 				m_hCine->OnBeginSequence();
+#endif
 
 				// If we have an entry, we have to play it first
 				if ( m_hCine->m_iszEntry != NULL_STRING )
 				{
+#ifndef SDK2013CE
+					m_hCine->OnEntrySequence( this );
+#endif
 					m_hCine->StartSequence( (CAI_BaseNPC *)this, m_hCine->m_iszEntry, true );
 				}
 				else
 				{
+#ifndef SDK2013CE
+					m_hCine->OnActionSequence( this );
+#endif
 					m_hCine->StartSequence( (CAI_BaseNPC *)this, m_hCine->m_iszPlay, true );
 				}
 

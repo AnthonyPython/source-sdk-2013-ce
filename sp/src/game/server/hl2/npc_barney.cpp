@@ -51,8 +51,10 @@ public:
 
 	virtual void Precache()
 	{
+#ifndef SDK2013CE // This is now done in CNPC_PlayerCompanion::Precache()
 		// Prevents a warning
 		SelectModel( );
+#endif
 		BaseClass::Precache();
 
 		PrecacheScriptSound( "NPC_Barney.FootstepLeft" );
@@ -111,6 +113,9 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CNPC_Barney::SelectModel()
 {
+#ifdef SDK2013CE
+	if (GetModelName() == NULL_STRING)
+#endif
 	SetModelName( AllocPooledString( BARNEY_MODEL ) );
 }
 

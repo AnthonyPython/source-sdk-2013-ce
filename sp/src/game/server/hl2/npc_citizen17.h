@@ -11,6 +11,10 @@
 #include "npc_playercompanion.h"
 
 #include "ai_behavior_functank.h"
+#ifdef SDK2013CE
+#include "ai_behavior_rappel.h"
+#include "ai_behavior_police.h"
+#endif
 
 struct SquadCandidate_t;
 
@@ -130,7 +134,9 @@ public:
 	void 			HandleAnimEvent( animevent_t *pEvent );
 	void			TaskFail( AI_TaskFailureCode_t code );
 
+#ifndef SDK2013CE // Moved to CAI_BaseNPC
 	void 			PickupItem( CBaseEntity *pItem );
+#endif
 
 	void 			SimpleUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
@@ -240,7 +246,9 @@ public:
 	void			InputSetAmmoResupplierOn( inputdata_t &inputdata );
 	void			InputSetAmmoResupplierOff( inputdata_t &inputdata );
 	void			InputSpeakIdleResponse( inputdata_t &inputdata );
-	void			InputAddCapability( inputdata_t &inputdata );
+#ifdef SDK2013CE
+	void			InputSetPoliceGoal( inputdata_t &inputdata );
+#endif
 
 	//---------------------------------
 	//	Sounds & speech
@@ -305,6 +313,11 @@ private:
 	float			m_flTimeLastCloseToPlayer;
 	string_t		m_iszDenyCommandConcept;
 
+#ifdef SDK2013CE
+	bool			m_bTossesMedkits;
+	bool			m_bAlternateAiming;
+#endif
+
 	CSimpleSimTimer	m_AutoSummonTimer;
 	Vector			m_vAutoSummonAnchor;
 
@@ -330,6 +343,14 @@ private:
 
 	//-----------------------------------------------------
 	CAI_FuncTankBehavior	m_FuncTankBehavior;
+#ifdef SDK2013CE
+	CAI_RappelBehavior		m_RappelBehavior;
+	CAI_PolicingBehavior	m_PolicingBehavior;
+
+	// Rappel
+	virtual bool IsWaitingToRappel( void ) { return m_RappelBehavior.IsWaitingToRappel(); }
+	void BeginRappel() { m_RappelBehavior.BeginRappel(); }
+#endif
 
 	CHandle<CAI_FollowGoal>	m_hSavedFollowGoalEnt;
 

@@ -93,6 +93,14 @@ void CBaseHLBludgeonWeapon::ItemPostFrame( void )
 	if ( pOwner == NULL )
 		return;
 
+#ifdef SDK2013CE
+	if (pOwner->HasSpawnFlags( SF_PLAYER_SUPPRESS_FIRING ))
+	{
+		WeaponIdle();
+		return;
+	}
+#endif
+
 	if ( (pOwner->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime) )
 	{
 		PrimaryAttack();

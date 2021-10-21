@@ -178,13 +178,20 @@ public:
 	int		DrawDebugTextOverlays( void );
 
 	// INPCInteractive Functions
+#ifdef SDK2013CE
+	virtual bool	CanInteractWith( CAI_BaseNPC *pUser );
+#else
 	virtual bool	CanInteractWith( CAI_BaseNPC *pUser ) { return false; } // Disabled for now (sjb)
+#endif
 	virtual	bool	HasBeenInteractedWith()	{ return m_bHackedByAlyx; }
 	virtual void	NotifyInteraction( CAI_BaseNPC *pUser )
 	{
 		// For now, turn green so we can tell who is hacked.
 		SetRenderColor( 0, 255, 0 );
 		m_bHackedByAlyx = true; 
+#ifdef SDK2013CE
+		m_OnHacked.FireOutput(pUser, this);
+#endif
 	}
 
 	static float	fMaxTipControllerVelocity;
@@ -230,7 +237,9 @@ protected:
 	bool	m_bCarriedByPlayer;
 	bool	m_bUseCarryAngles;
 	float	m_flPlayerDropTime;
+#ifndef SDK2013CE // Replaced with m_nSkin.
 	int		m_iKeySkin;
+#endif
 
 	CHandle<CBaseCombatCharacter> m_hLastNPCToKickMe;		// Stores the last NPC who tried to knock me over
 	float	m_flKnockOverFailedTime;						// Time at which we should tell the NPC that he failed to knock me over

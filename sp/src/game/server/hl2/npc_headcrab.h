@@ -149,6 +149,10 @@ protected:
 
 	bool	m_bHangingFromCeiling;
 	float	m_flIlluminatedTime;
+
+#ifdef SDK2013CE
+	COutputEvent m_OnLeap;
+#endif
 };
 
 

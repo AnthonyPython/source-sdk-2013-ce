@@ -335,7 +335,11 @@ void CAI_PolicingBehavior::StartTask( const Task_t *pTask )
 
 			if ( GetNavigator()->SetGoal( harassPos, pTask->flTaskData ) )
 			{
+#ifdef SDK2013CE
+				GetNavigator()->SetMovementActivity( GetOuter()->TranslateActivity(ACT_WALK_ANGRY) );
+#else
 				GetNavigator()->SetMovementActivity( (Activity) ACT_WALK_ANGRY );
+#endif
 				GetNavigator()->SetArrivalDirection( m_hPoliceGoal->GetTarget() );
 				TaskComplete();
 			}

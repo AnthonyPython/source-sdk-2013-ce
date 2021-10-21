@@ -341,6 +341,27 @@ void CBaseCombatWeapon::Precache( void )
 	}
 }
 
+#ifdef SDK2013CE
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseCombatWeapon::Reload_NPC(void)
+{
+	WeaponSound(RELOAD_NPC);
+
+	if (UsesClipsForAmmo1())
+	{
+		m_iClip1 = GetMaxClip1();
+	}
+	else
+	{
+		// For weapons which don't use clips, give the owner ammo.
+		if (GetOwner())
+			GetOwner()->SetAmmoCount(GetDefaultClip1(), m_iPrimaryAmmoType);
+	}
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: Get my data in the file weapon info array
 //-----------------------------------------------------------------------------
@@ -1058,6 +1079,94 @@ void CBaseCombatWeapon::SetPickupTouch( void )
 #endif
 }
 
+
+#ifdef SDK2013CE
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+WeaponClass_t CBaseCombatWeapon::WeaponClassify()
+{
+	// For now, check how we map our "angry idle" activity.
+	// The function is virtual, so derived weapons can override this.
+	Activity idleact = ActivityOverride(ACT_IDLE_ANGRY, NULL);
+	switch (idleact)
+	{
+#ifdef EXPANDED_HL2_WEAPON_ACTIVITIES
+	case ACT_IDLE_ANGRY_REVOLVER:
+#endif
+	case ACT_IDLE_ANGRY_PISTOL:		return WEPCLASS_HANDGUN;
+#ifdef EXPANDED_HL2_WEAPON_ACTIVITIES
+	case ACT_IDLE_ANGRY_CROSSBOW:	// For now, crossbows are rifles
+#endif
+	case ACT_IDLE_ANGRY_SMG1:
+	case ACT_IDLE_ANGRY_AR2:		return WEPCLASS_RIFLE;
+	case ACT_IDLE_ANGRY_SHOTGUN:	return WEPCLASS_SHOTGUN;
+	case ACT_IDLE_ANGRY_RPG:		return WEPCLASS_HEAVY;
+
+	case ACT_IDLE_ANGRY_MELEE:		return WEPCLASS_MELEE;
+	}
+	return WEPCLASS_INVALID;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+WeaponClass_t CBaseCombatWeapon::WeaponClassFromString(const char* str)
+{
+	if (FStrEq(str, "WEPCLASS_HANDGUN"))
+		return WEPCLASS_HANDGUN;
+	else if (FStrEq(str, "WEPCLASS_RIFLE"))
+		return WEPCLASS_RIFLE;
+	else if (FStrEq(str, "WEPCLASS_SHOTGUN"))
+		return WEPCLASS_SHOTGUN;
+	else if (FStrEq(str, "WEPCLASS_HEAY"))
+		return WEPCLASS_HEAVY;
+
+	else if (FStrEq(str, "WEPCLASS_MELEE"))
+		return WEPCLASS_MELEE;
+
+	return WEPCLASS_INVALID;
+}
+
+#ifdef HL2_DLL
+extern acttable_t* GetSMG1Acttable();
+extern int GetSMG1ActtableCount();
+#endif
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBaseCombatWeapon::SupportsBackupActivity(Activity activity)
+{
+	// Derived classes should override this.
+
+#ifdef HL2_DLL
+	// Melee users should not use SMG animations for missing activities.
+	if (IsMeleeWeapon() && GetBackupActivityList() == GetSMG1Acttable())
+		return false;
+#endif
+
+	return true;
+}
+
+acttable_t* CBaseCombatWeapon::GetBackupActivityList()
+{
+#ifdef HL2_DLL
+	return GetSMG1Acttable();
+#else
+	return NULL;
+#endif
+}
+
+int CBaseCombatWeapon::GetBackupActivityListCount()
+{
+#ifdef HL2_DLL
+	return GetSMG1ActtableCount();
+#else
+	return 0;
+#endif
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Become a child of the owner (MOVETYPE_FOLLOW)

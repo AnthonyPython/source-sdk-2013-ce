@@ -316,6 +316,10 @@ struct UnreachableEnt_t
 #define SCNPC_FLAG_NEEDS_WEAPON_THEM			( 1 << 5 )
 #define SCNPC_FLAG_DONT_TELEPORT_AT_END_ME		( 1 << 6 )
 #define SCNPC_FLAG_DONT_TELEPORT_AT_END_THEM	( 1 << 7 )
+#ifdef SDK2013CE
+#define SCNPC_FLAG_MAPBASE_ADDITION				( 1 << 8 )
+#define SCNPC_FLAG_TEST_END_POSITION			( 1 << 9 )
+#endif
 
 // -----------------------------------------
 //	Scripted NPC interaction trigger methods
@@ -387,6 +391,9 @@ struct ScriptedNPCInteraction_t
 		flNextAttemptTime = 0;
 		iszMyWeapon = NULL_STRING;
 		iszTheirWeapon = NULL_STRING;
+#ifdef SDK2013CE
+		vecRelativeEndPos = vec3_origin;
+#endif
 
 		for ( int i = 0; i < SNPCINT_NUM_PHASES; i++)
 		{
@@ -403,6 +410,9 @@ struct ScriptedNPCInteraction_t
 	Vector		vecRelativeOrigin;			// (forward, right, up)
 	QAngle		angRelativeAngles;				
 	Vector		vecRelativeVelocity;		// Desired relative velocity of the other NPC
+#ifdef SDK2013CE
+	Vector		vecRelativeEndPos;			// Relative position that the NPC must fit in
+#endif
 	float		flDelay;					// Delay before interaction can be used again
 	float		flDistSqr;					// Max distance sqr from the relative origin the NPC is allowed to be to trigger
 	string_t	iszMyWeapon;				// Classname of the weapon I'm holding, if any
@@ -704,6 +714,7 @@ protected:
 	virtual bool		LoadedSchedules(void);
 	virtual void		BuildScheduleTestBits( void );
 
+
 	//---------------------------------
 
 	// This is the main call to select/translate a schedule
@@ -926,6 +937,10 @@ public:
 	
 	Activity			TranslateActivity( Activity idealActivity, Activity *pIdealWeaponActivity = NULL );
 	Activity			NPC_TranslateActivity( Activity eNewActivity );
+#ifdef SDK2013CE
+	Activity			TranslateCrouchActivity( Activity baseAct );
+	virtual Activity	NPC_BackupActivity( Activity eNewActivity );
+#endif
 	Activity			GetActivity( void ) { return m_Activity; }
 	virtual void		SetActivity( Activity NewActivity );
 	Activity			GetIdealActivity( void ) { return m_IdealActivity; }
@@ -1209,6 +1224,10 @@ public:
 	virtual void		PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot );
 
 	virtual void		ModifyOrAppendCriteria( AI_CriteriaSet& set );
+#ifdef SDK2013CE
+	virtual void		ModifyOrAppendEnemyCriteria(AI_CriteriaSet& set, CBaseEntity* pEnemy);
+	//virtual void		ModifyOrAppendDamageCriteria(AI_CriteriaSet& set, const CTakeDamageInfo& info);
+#endif
 
 protected:
 	float		SoundWaitTime() const { return m_flSoundWaitTime; }
@@ -1225,6 +1244,24 @@ public:
 	int					CapabilitiesAdd( int capabilities );
 	int					CapabilitiesRemove( int capabilities );
 	void				CapabilitiesClear( void );
+
+#ifdef SDK2013CE
+	void				InputAddCapabilities(inputdata_t& inputdata);
+	void				InputRemoveCapabilities(inputdata_t& inputdata);
+#endif
+
+#ifdef SDK2013CE
+	ThreeState_t m_FriendlyFireOverride = TRS_NONE;
+	//virtual bool	FriendlyFireEnabled();
+	//void			InputSetFriendlyFire(inputdata_t& inputdata);
+
+	// Grenade-related functions from Combine soldiers ported to ai_basenpc so they could be shared.
+	// 
+	// This is necessary because other NPCs can use them now and many instances where they were used relied on dynamic_casts.
+	virtual Vector		GetAltFireTarget() { return GetEnemy() ? GetEnemy()->BodyTarget(Weapon_ShootPosition()) : vec3_origin; }
+	virtual void		DelayGrenadeCheck(float delay) { ; }
+	virtual void		AddGrenades(int inc, CBaseEntity* pLastGrenade = NULL) { ; }
+#endif
 
 private:
 	int					m_afCapability;			// tells us what a npc can/can't do.
@@ -1562,6 +1599,18 @@ public:
 	bool				IsWeaponStateChanging( void );
 	void				SetDesiredWeaponState( DesiredWeaponState_t iState ) { m_iDesiredWeaponState = iState; }
 
+#ifdef SDK2013CE
+	virtual bool		DoHolster(void);
+	virtual bool		DoUnholster(void);
+
+	virtual bool		ShouldUnholsterWeapon();
+	virtual bool		CanUnholsterWeapon();
+
+	void				InputGiveWeaponHolstered(inputdata_t& inputdata);
+	void				InputChangeWeapon(inputdata_t& inputdata);
+	void				InputPickupWeapon(inputdata_t& inputdata);
+	void				InputPickupItem(inputdata_t& inputdata);
+#endif
 	// NOTE: The Shot Regulator is used to manage the RangeAttack1 weapon.
 	inline CAI_ShotRegulator* GetShotRegulator()		{ return &m_ShotRegulator; }
 	virtual void		OnRangeAttack1();
@@ -1582,6 +1631,10 @@ protected:
 	float				m_flLastAttackTime;			// Last time that I attacked my current enemy
 	float				m_flLastEnemyTime;
 	float				m_flNextWeaponSearchTime;	// next time to search for a better weapon
+#ifdef SDK2013CE
+public:
+	int					m_iLastHolsteredWeapon;
+#endif
 	string_t			m_iszPendingWeapon;			// THe NPC should create and equip this weapon.
 	bool				m_bIgnoreUnseenEnemies;
 
@@ -1706,7 +1759,12 @@ public:
 	virtual bool		ShouldLookForBetterWeapon();
 	bool				Weapon_IsBetterAvailable ( void ) ;
 	virtual Vector		Weapon_ShootPosition( void );
+#ifdef SDK2013CE
+	virtual	CBaseCombatWeapon*		GiveWeapon( string_t iszWeaponName, bool bDiscardCurrent = true );
+	virtual	CBaseCombatWeapon*		GiveWeaponHolstered( string_t iszWeaponName );
+#else
 	virtual	void		GiveWeapon( string_t iszWeaponName );
+#endif
 	virtual void		OnGivenWeapon( CBaseCombatWeapon *pNewWeapon ) { }
 	bool				IsMovingToPickupWeapon();
 	virtual bool		WeaponLOSCondition(const Vector &ownerPos, const Vector &targetPos, bool bSetConditions);
@@ -1804,7 +1862,7 @@ public:
 	//---------------------------------
 
 	virtual void	PickupWeapon( CBaseCombatWeapon *pWeapon );
-	virtual void	PickupItem( CBaseEntity *pItem ) { };
+	virtual void	PickupItem( CBaseEntity *pItem );
 	CBaseEntity*	DropItem( const char *pszItemName, Vector vecPos, QAngle vecAng );// drop an item.
 
 
@@ -1903,6 +1961,16 @@ public:
 	COutputEvent		m_OnForcedInteractionStarted;
 	COutputEvent		m_OnForcedInteractionAborted;
 	COutputEvent		m_OnForcedInteractionFinished;
+
+#ifdef SDK2013CE
+	COutputEHANDLE		m_OnHolsterWeapon;
+	COutputEHANDLE		m_OnUnholsterWeapon;
+
+	COutputEHANDLE		m_OnItemPickup;
+	COutputEHANDLE		m_OnItemDrop;
+
+	//COutputInt			m_OnStateChange;
+#endif
 
 public:
 	// use this to shrink the bbox temporarily
@@ -3059,10 +3127,19 @@ public:
 // NOTE: YOU MUST DEFINE THE OUTPUTS IN YOUR CLASS'S DATADESC!
 //		 THE DO SO, INSERT THE FOLLOWING MACRO INTO YOUR CLASS'S DATADESC.
 //		
+#ifdef SDK2013CE
+#define	DEFINE_BASENPCINTERACTABLE_DATADESC() \
+	DEFINE_OUTPUT( m_OnAlyxStartedInteraction,				"OnAlyxStartedInteraction" ),	\
+	DEFINE_OUTPUT( m_OnAlyxFinishedInteraction,				"OnAlyxFinishedInteraction" ),  \
+	DEFINE_OUTPUT( m_OnHacked,								"OnHacked" ),  \
+	DEFINE_INPUTFUNC( FIELD_VOID, "InteractivePowerDown", InputPowerdown ), \
+	DEFINE_INPUTFUNC( FIELD_VOID, "Hack", InputDoInteraction )
+#else
 #define	DEFINE_BASENPCINTERACTABLE_DATADESC() \
 	DEFINE_OUTPUT( m_OnAlyxStartedInteraction,				"OnAlyxStartedInteraction" ),	\
 	DEFINE_OUTPUT( m_OnAlyxFinishedInteraction,				"OnAlyxFinishedInteraction" ),  \
 	DEFINE_INPUTFUNC( FIELD_VOID, "InteractivePowerDown", InputPowerdown )
+#endif
 
 template <class NPC_CLASS>
 class CNPCBaseInteractive : public NPC_CLASS, public INPCInteractive
@@ -3077,6 +3154,13 @@ public:
 	{
 
 	}
+
+#ifdef SDK2013CE
+	virtual void	InputDoInteraction(inputdata_t& inputdata)
+	{
+		NotifyInteraction(inputdata.pActivator ? inputdata.pActivator->MyNPCPointer() : NULL);
+	}
+#endif
 
 	// Alyx specific interactions
 	virtual void	AlyxStartedInteraction( void )
@@ -3093,6 +3177,9 @@ public:
 	// Alyx specific interactions
 	COutputEvent	m_OnAlyxStartedInteraction;
 	COutputEvent	m_OnAlyxFinishedInteraction;
+#ifdef SDK2013CE
+	COutputEvent	m_OnHacked;
+#endif
 };
 
 //

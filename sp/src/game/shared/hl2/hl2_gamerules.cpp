@@ -94,6 +94,11 @@ ConVar	sk_autoaim_scale1( "sk_autoaim_scale1", "1.0", FCVAR_REPLICATED );
 ConVar	sk_autoaim_scale2( "sk_autoaim_scale2", "1.0", FCVAR_REPLICATED );
 //ConVar	sk_autoaim_scale3( "sk_autoaim_scale3", "0.0", FCVAR_REPLICATED ); NOT CURRENTLY OFFERED ON SKILL 3
 
+#ifdef SDK2013CE
+ConVar	sk_plr_num_shotgun_pellets_double("sk_plr_num_shotgun_pellets_double", "12", FCVAR_REPLICATED);
+ConVar	sk_npc_num_shotgun_pellets("sk_npc_num_shotgun_pellets", "8", FCVAR_REPLICATED);
+#endif
+
 // Quantity scale for ammo received by the player.
 ConVar	sk_ammo_qty_scale1 ( "sk_ammo_qty_scale1", "1.20", FCVAR_REPLICATED );
 ConVar	sk_ammo_qty_scale2 ( "sk_ammo_qty_scale2", "1.00", FCVAR_REPLICATED );

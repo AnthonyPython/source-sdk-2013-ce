@@ -1075,6 +1075,40 @@ bool CAI_Hint::IsInNodeFOV( CBaseEntity *pOther )
 	return false;
 }
 
+#ifdef SDK2013CE
+//-----------------------------------------------------------------------------
+// An easy way of engaging certain hint parameters on certain hint types that didn't use it before.
+//-----------------------------------------------------------------------------
+void CAI_Hint::NPCHandleStartNav( CAI_BaseNPC *pNPC, bool bDefaultFacing )
+{
+	Assert( pNPC != NULL );
+
+	HintIgnoreFacing_t facing = GetIgnoreFacing();
+	if (facing == HIF_DEFAULT)
+		facing = bDefaultFacing ? HIF_YES : HIF_NO;
+
+	if (facing == HIF_YES)
+		pNPC->GetNavigator()->SetArrivalDirection(GetDirection());
+
+	if (HintActivityName() != NULL_STRING)
+	{
+		Activity hintActivity = (Activity)CAI_BaseNPC::GetActivityID( STRING(HintActivityName()) );
+		if ( hintActivity != ACT_INVALID )
+		{
+			pNPC->GetNavigator()->SetArrivalActivity( pNPC->GetHintActivity(HintType(), hintActivity) );
+		}
+		else
+		{
+			int iSequence = pNPC->LookupSequence(STRING(HintActivityName()));
+			if ( iSequence != ACT_INVALID )
+			{
+				pNPC->GetNavigator()->SetArrivalSequence( iSequence );
+			}
+		}
+	}
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: Locks the node for use by an AI for hints
 // Output : Returns true if the node was available for locking, false on failure.
@@ -1425,6 +1459,15 @@ int CAI_Hint::DrawDebugTextOverlays(void)
 		Q_snprintf(tempstr,sizeof(tempstr),"delay %f", MAX( 0.0f, m_flNextUseTime - gpGlobals->curtime ) ) ;
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
+
+#ifdef SDK2013CE
+		if (m_NodeData.strGroup != NULL_STRING)
+		{
+			Q_snprintf(tempstr,sizeof(tempstr),"hintgroup %s", STRING(m_NodeData.strGroup) ) ;
+			EntityText(text_offset,tempstr,0);
+			text_offset++;
+		}
+#endif
 
 		if ( m_NodeData.iDisabled )
 		{

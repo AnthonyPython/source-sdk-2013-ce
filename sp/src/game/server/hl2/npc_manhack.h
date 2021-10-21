@@ -155,7 +155,11 @@ public:
 	float GetMaxEnginePower();
 
 	// INPCInteractive Functions
+#ifdef SDK2013CE
+	virtual bool	CanInteractWith( CAI_BaseNPC *pUser );
+#else
 	virtual bool	CanInteractWith( CAI_BaseNPC *pUser ) { return false; } // Disabled for now (sjb)
+#endif
 	virtual	bool	HasBeenInteractedWith()	{ return m_bHackedByAlyx; }
 	virtual void	NotifyInteraction( CAI_BaseNPC *pUser )
 	{

@@ -64,8 +64,10 @@ public:
 
 	virtual void Precache()
 	{
+#ifndef SDK2013CE // This is now done in CNPC_PlayerCompanion::Precache()
 		// Prevents a warning
-		SelectModel( );
+		SelectModel();
+#endif
 		BaseClass::Precache();
 
 		PrecacheScriptSound( "NPC_Fisherman.FootstepLeft" );

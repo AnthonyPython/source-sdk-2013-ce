@@ -181,6 +181,10 @@ private:
 	bool			m_bInQueue;
 	int				m_iCurrentBusyAnim;
 	CHandle<CAI_ActBusyGoal> m_hActBusyGoal;
+#ifdef SDK2013CE
+	// So exit animations can play
+	CHandle<CAI_ActBusyGoal> m_hNextActBusyGoal;
+#endif
 	bool			m_bNeedToSetBounds;
 	EHANDLE			m_hSeeEntity;
 	float			m_fTimeLastSawSeeEntity;

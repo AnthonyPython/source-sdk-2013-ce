@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include <crtmemdebug.h>
 #include "vgui_int.h"
+//#include <d3d9.h>
 #include "clientmode.h"
 #include "iinput.h"
 #include "iviewrender.h"
@@ -87,6 +88,8 @@
 #include "ihudlcd.h"
 #include "toolframework_client.h"
 #include "hltvcamera.h"
+#include <CEGUI/CEGUI.h>
+#include <CEGUI/RendererModules/Direct3D9/Renderer.h>
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #include "replay/replay_ragdoll.h"
@@ -204,6 +207,8 @@ IXboxSystem *xboxsystem = NULL;	// Xbox 360 only
 IMatchmaking *matchmaking = NULL;
 IUploadGameStats *gamestatsuploader = NULL;
 IClientReplayContext *g_pClientReplayContext = NULL;
+//IDirect3D9* D3ddevice = IDirect3D9::CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL);
+//CEGUI::Direct3D9Renderer& CEGUI_render = CEGUI::Direct3D9Renderer::bootstrapSystem(0, CEGUI_VERSION_ABI);
 #if defined( REPLAY_ENABLED )
 IReplayManager *g_pReplayManager = NULL;
 IReplayMovieManager *g_pReplayMovieManager = NULL;
@@ -367,20 +372,20 @@ public:
 
 	void OnGameUIActivated( void )
 	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "gameui_activated" );
+		/*IGameEvent* event = gameeventmanager->CreateEvent("gameui_activated");
 		if ( event )
 		{
 			gameeventmanager->FireEventClientSide( event );
-		}
+		}*/
 	}
 
 	void OnGameUIHidden( void )
 	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "gameui_hidden" );
+		/*IGameEvent *event = gameeventmanager->CreateEvent( "gameui_hidden" );
 		if ( event )
 		{
 			gameeventmanager->FireEventClientSide( event );
-		}
+		}*/
 	}
 
     //=============================================================================

@@ -3,7 +3,7 @@ name: Windows
 on: 
   push:
     paths:
-      - 'sp/src/**'
+      - '.github/**'
   pull_request:
    paths:
       - 'sp/src/**'
@@ -27,10 +27,10 @@ jobs:
           REG ADD "HKLM\Software\Microsoft\VisualStudio\12.0\Projects\{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" /v "PossibleProjectExtensions" /t REG_SZ /d "vcxproj;vcxitems;vcproj;mak" /f /reg:32
 
       - name: Create project
-        run: cd sp;src;devtools/bin/vpc.exe /sdk2013ce /2013 +game /mksln sdk2013ce.sln
+        run: cd sp/src;devtools/bin/vpc.exe /sdk2013ce /2013 +game /mksln sdk2013ce.sln
 
       - name: Build project
-        run: cd sp;devenv sdk2013ce.sln /Build Release
+        run: cd src;devenv sdk2013ce.sln /Build Release
 
       - name: Pack
         shell: bash

@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/**'
+      - 'sp/src/**'
   pull_request:
    paths:
       - 'sp/src/**'

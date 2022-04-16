@@ -88,8 +88,8 @@
 #include "ihudlcd.h"
 #include "toolframework_client.h"
 #include "hltvcamera.h"
-#include <CEGUI/CEGUI.h>
-#include <CEGUI/RendererModules/Direct3D9/Renderer.h>
+//#include <CEGUI/CEGUI.h>
+//#include <CEGUI/RendererModules/Direct3D9/Renderer.h>
 #if defined( REPLAY_ENABLED )
 #include "replay/replaycamera.h"
 #include "replay/replay_ragdoll.h"

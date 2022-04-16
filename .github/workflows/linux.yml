@@ -3,15 +3,15 @@ name: Linux
 on: 
   push:
     paths:
-      - 'src/**'
+      - 'sp/src/**'
   pull_request:
    paths:
-      - 'src/**'
+      - 'sp/src/**'
 
 env:
   STEAM_RUNTIME_PATH: /valve/steam-runtime
   CCACHE_VERSION: 4.2.1
-  CCACHE_DIR: ${{ github.workspace }}/src/ccache
+  CCACHE_DIR: ${{ github.workspace }}/sp/src/ccache
 
 jobs:
   build:
@@ -45,7 +45,7 @@ jobs:
       
       - name: Setup ccache
         run: |
-          sudo mkdir -p game/tf2vintage/bin
+          sudo mkdir -p game/mod_sdk2013ce/bin
           cd src
           sudo mkdir -p ./ccache/tmp
           cd devtools/bin/linux
@@ -60,7 +60,7 @@ jobs:
         run: sudo apt update && sudo apt install -y build-essential gcc-multilib g++-multilib
 
       - name: Create project
-        run: cd src && sudo devtools/bin/vpc /tf2vintage +game /mksln TF2vintage
+        run: cd sp/src && sudo devtools/bin/vpc.exe /sdk2013ce /2013 +game /mksln sdk2013ce
       
       - name: Download Steam runtime
         run: |
@@ -73,15 +73,15 @@ jobs:
           sudo bash $STEAM_RUNTIME_PATH/setup.sh --release --target="i386 amd64" --auto-upgrade
 
       - name: Build project
-        run: cd src && sudo make -f TF2vintage.mak
+        run: cd src && sudo make -f sdk2013ce.mak
       
       - name: Pack
         run: |
-          sudo tar cJfv Linux.tar.xz game/tf2vintage/bin
+          sudo tar cJfv Linux.tar.xz game/mod_sdk2013ce/bin
           sudo bash .github/gh-cache.sh
 
       - name: Upload product
         uses: actions/upload-artifact@v2
         with:
-          name: TF2Vintage
+          name: sdk2013ce
           path: Linux.tar.xz

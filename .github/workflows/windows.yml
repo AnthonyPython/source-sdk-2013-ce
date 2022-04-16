@@ -3,10 +3,10 @@ name: Windows
 on: 
   push:
     paths:
-      - 'src/**'
+      - 'sp/src/**'
   pull_request:
    paths:
-      - 'src/**'
+      - 'sp/src/**'
 
 jobs:
   build:
@@ -27,17 +27,17 @@ jobs:
           REG ADD "HKLM\Software\Microsoft\VisualStudio\12.0\Projects\{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}" /v "PossibleProjectExtensions" /t REG_SZ /d "vcxproj;vcxitems;vcproj;mak" /f /reg:32
 
       - name: Create project
-        run: cd src;devtools/bin/vpc.exe /tf2vintage /2015 +game /mksln TF2vintage.sln
+        run: cd sp;src;devtools/bin/vpc.exe /sdk2013ce /2013 +game /mksln sdk2013ce.sln
 
       - name: Build project
-        run: cd src;devenv TF2vintage.sln /Build Release
+        run: cd sp;devenv sdk2013ce.sln /Build Release
 
       - name: Pack
         shell: bash
-        run: tar cJfv Windows.tar.xz game/tf2vintage/bin
+        run: tar cJfv Windows.tar.xz game/mod_sdk2013ce/bin
 
       - name: Upload product
         uses: actions/upload-artifact@v2
         with:
-          name: TF2Vintage
+          name: sdk2013ce
           path: Windows.tar.xz

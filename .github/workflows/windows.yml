@@ -30,7 +30,7 @@ jobs:
         run: cd sp/src;devtools/bin/vpc.exe /sdk2013ce /2013 +game /mksln sdk2013ce.sln
 
       - name: Build project
-        run: cd src;devenv sdk2013ce.sln /Build Release
+        run: cd sp/src;devenv sdk2013ce.sln /Build Release
 
       - name: Pack
         shell: bash

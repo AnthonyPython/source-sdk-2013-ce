@@ -1,6 +1,12 @@
 # Source SDK 2013 Community Edition Template
-Source 2013 CE Template is a fork of NBC's [Source SDK 2013 repo](https://github.com/Nbc66/source-sdk-2013-ce) 
+Source 2013 CE Template is a fork of NBC's [Source SDK 2013 CE repo](https://github.com/Nbc66/source-sdk-2013-ce) 
 with the goal of adding varied extra features that can be enabled or disabled through Define's in code. Eventually there will be a tool to set it up like the old sdk.
+
+# Binaries Only:
+
+[![Linux](https://github.com/AnthonyPython/source-sdk-2013-ce/actions/workflows/linux.yml/badge.svg)](https://github.com/AnthonyPython/source-sdk-2013-ce/actions/workflows/linux.yml)
+
+[![Windows](https://github.com/AnthonyPython/source-sdk-2013-ce/actions/workflows/windows.yml/badge.svg)](https://github.com/AnthonyPython/source-sdk-2013-ce/actions/workflows/windows.yml)
 
 # Info
 template_CE_2013 is the Master branch of the project. Code Additions comes from VDC, mapbase, NBC, and Anthonypython, and Alienswarm.

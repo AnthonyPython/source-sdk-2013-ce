@@ -41,5 +41,5 @@ jobs:
       - name: Upload product
         uses: actions/upload-artifact@v2
         with:
-          name: sdk2013ce
+          name: mp_sdk2013ce
           path: Windows.tar.xz

@@ -3,7 +3,6 @@ name: Linux
 on: 
   push:
     paths:
-      - '.github/**'
       - 'sp/src/**'
   pull_request:
    paths:
@@ -61,10 +60,7 @@ jobs:
         run: sudo apt update && sudo apt install -y build-essential gcc-multilib g++-multilib
 
       - name: Create project
-        run: | 
-        cd sp
-        cd src 
-        sudo devtools/bin/vpc.exe /sdk2013ce /2013 +game /mksln sdk2013ce
+        run: cd sp && cd src && sudo devtools/bin/vpc.exe /sdk2013ce /2013 +game /mksln sdk2013ce
       
       - name: Download Steam runtime
         run: |

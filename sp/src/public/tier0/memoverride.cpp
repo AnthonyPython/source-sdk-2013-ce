@@ -277,11 +277,18 @@ extern "C"
 
         return pMemOut;
     }
-
+#if _MSC_VER == 1929
     size_t _msize_base(void* pMem)
     {
         return g_pMemAlloc->GetSize(pMem);
     }
+#if _MSC_VER > 1929
+    size_t _msize_base(void* pMem)noexcept
+    {
+        return g_pMemAlloc->GetSize(pMem);
+    }
+#endif
+#endif
 
     size_t _msize(void* pMem)
     {

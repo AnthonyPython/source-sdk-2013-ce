@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     runs-on:
-      windows-latest
+      windows-2019
     
     steps:
       - name: Checkout
@@ -20,6 +20,8 @@ jobs:
 
       - name: Configure dependencies
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+            sdk: 10.0.19041.0
 
       - name: Configure registry
         shell: powershell

@@ -15,6 +15,7 @@ template_CE_2013 is the Master branch of the project. Code Additions comes from 
 To be able to use Source 2013 CE you will need to download:
 * Visual Studio 2019
 * Multibyte MFC Library for Visual Studio 2019
+* Win SDK 10.0.22 
 
 # Contributing
 We appreciate any form of help so ideally if you want to help this project out the best way would be to make a pull request.

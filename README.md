@@ -1,5 +1,5 @@
 # Source SDK 2013 Community Edition Template
-Source 2013 CE Template is a fork of NBC's [Source SDK 2013 repo](https://github.com/Nbc66/source-sdk-2013-ce) 
+Source 2013 CE Template is a fork of NBC's [Source SDK 2013 CE repo](https://github.com/Nbc66/source-sdk-2013-ce) 
 with the goal of adding varied extra features that can be enabled or disabled through Define's in code. Eventually there will be a tool to set it up like the old sdk.
 
 # Binaries Only:

@@ -3,6 +3,7 @@ name: Linux
 on: 
   push:
     paths:
+      - '.github/**'
       - 'sp/src/**'
   pull_request:
    paths:

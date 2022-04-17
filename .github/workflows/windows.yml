@@ -20,8 +20,7 @@ jobs:
 
       - name: Configure dependencies
         uses: ilammy/msvc-dev-cmd@v1
-        with:
-            sdk: 10.0.19041.0
+        
 
       - name: Configure registry
         shell: powershell

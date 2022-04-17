@@ -34,7 +34,7 @@ jobs:
       - name: Build project
         run: cd sp/src;devenv sdk2013ce.sln /Build Release
 
-      - name: Pack
+      - name: Pack 
         shell: bash
         run: tar cJfv Windows.tar.xz sp/game/mod_sdk2013ce/bin
 

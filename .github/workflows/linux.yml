@@ -52,7 +52,7 @@ jobs:
           cd devtools/bin/linux
           sudo ./ccache --set-config cache_dir=$CCACHE_DIR
           sudo ./ccache --set-config compression_level=6
-      
+          cd ../
       - name: Restore cache
         if: steps.cache.outputs.cache-hit == 'true'
         run: sudo bash .github/gh-cache.sh restore
@@ -74,7 +74,7 @@ jobs:
           sudo bash $STEAM_RUNTIME_PATH/setup.sh --release --target="i386 amd64" --auto-upgrade
 
       - name: Build project
-        run: cd src && sudo make -f sdk2013ce.mak
+        run: cd sp/src && sudo make -f sdk2013ce.mak
       
       - name: Pack
         run: |

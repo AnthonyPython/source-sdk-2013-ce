@@ -52,7 +52,6 @@ jobs:
           cd devtools/bin/linux
           sudo ./ccache --set-config cache_dir=$CCACHE_DIR
           sudo ./ccache --set-config compression_level=6
-          cd ../
       - name: Restore cache
         if: steps.cache.outputs.cache-hit == 'true'
         run: sudo bash .github/gh-cache.sh restore
@@ -60,7 +59,8 @@ jobs:
       - name: Configure dependencies
         run: sudo apt update && sudo apt install -y build-essential gcc-multilib g++-multilib
 
-      
+      - name: Create project
+        run: cd src && sudo devtools/bin/vpc /sdk2013ce /2013 +game /mksln sdk2013ce
       
       - name: Download Steam runtime
         run: |

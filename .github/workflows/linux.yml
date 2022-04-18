@@ -60,8 +60,7 @@ jobs:
       - name: Configure dependencies
         run: sudo apt update && sudo apt install -y build-essential gcc-multilib g++-multilib
 
-      - name: Create project
-        run: sudo sp/src/devtools/bin/vpc.exe /sdk2013ce /2013 +game /mksln sdk2013ce
+      
       
       - name: Download Steam runtime
         run: |

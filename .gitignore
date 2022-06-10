@@ -37,7 +37,7 @@ bld/
 [Ll]og/
 
 # OSX/Linux build products
-*.mak
+#*.mak
 *.mak.vpc_crc
 *.xcodeproj/
 obj*/
